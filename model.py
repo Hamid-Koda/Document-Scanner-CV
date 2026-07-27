@@ -71,3 +71,42 @@ class EnhancementUNet(nn.Module):
         # Final output
         out = self.out_conv(d1)
         return self.sigmoid(out)
+    
+
+class DirectCornerRegressor(nn.Module):
+    def __init__(self, in_channels=3):
+        super().__init__()
+        
+        # Encoder (Feature Extractor)
+        # Assuming input image is resized to 256x256
+        self.features = nn.Sequential(
+            nn.Conv2d(in_channels, 32, kernel_size=3, padding=1, stride=2), # 128x128
+            nn.ReLU(inplace=True),
+            nn.Conv2d(32, 64, kernel_size=3, padding=1, stride=2),          # 64x64
+            nn.ReLU(inplace=True),
+            nn.Conv2d(64, 128, kernel_size=3, padding=1, stride=2),         # 32x32
+            nn.ReLU(inplace=True),
+            nn.Conv2d(128, 256, kernel_size=3, padding=1, stride=2),        # 16x16
+            nn.ReLU(inplace=True),
+            nn.Conv2d(256, 512, kernel_size=3, padding=1, stride=2),        # 8x8
+            nn.ReLU(inplace=True)
+        )
+
+        # Fully Connected layers (Regressor)
+        self.regressor = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(512 * 8 * 8, 512),
+            nn.ReLU(inplace=True),
+            nn.Linear(512, 128),
+            nn.ReLU(inplace=True),
+            nn.Linear(128, 8),   # 4 corners * 2 coordinates (x, y)
+            nn.Sigmoid()         # Output normalized to [0, 1]
+        )
+
+    def forward(self, x):
+        x = self.features(x)
+        x = self.regressor(x)
+        
+        # Reshape output from (Batch, 8) to (Batch, 4 corners, 2 coords)
+        # This matches the shape of our target tensor in CornerDataset
+        return x.view(-1, 4, 2)
