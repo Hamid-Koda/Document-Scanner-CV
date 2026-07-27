@@ -6,6 +6,41 @@ class DocumentDegradation:
     def __init__(self):
         pass
 
+    def apply_perspective_warp(self, scan_img, bg_img):
+        """1. Random perspective warp onto a random background"""
+        h, w = scan_img.shape[:2]
+        bg_h, bg_w = bg_img.shape[:2]
+        
+        # Source corners (clean scan)
+        src_pts = np.float32([[0, 0], [w, 0], [w, h], [0, h]])
+        
+        # Target corners on background (randomized)
+        margin_x, margin_y = bg_w * 0.2, bg_h * 0.2
+        pt1 = [random.uniform(0, margin_x), random.uniform(0, margin_y)]
+        pt2 = [random.uniform(bg_w - margin_x, bg_w), random.uniform(0, margin_y)]
+        pt3 = [random.uniform(bg_w - margin_x, bg_w), random.uniform(bg_h - margin_y, bg_h)]
+        pt4 = [random.uniform(0, margin_x), random.uniform(bg_h - margin_y, bg_h)]
+        
+        dst_pts = np.float32([pt1, pt2, pt3, pt4])
+        
+        # Compute Homography matrix
+        M = cv2.getPerspectiveTransform(src_pts, dst_pts)
+        
+        # Warp the clean scan
+        warped_scan = cv2.warpPerspective(scan_img, M, (bg_w, bg_h))
+        
+        # Create a mask to blend with background
+        mask = np.ones((h, w), dtype=np.uint8) * 255
+        warped_mask = cv2.warpPerspective(mask, M, (bg_w, bg_h))
+        inv_mask = cv2.bitwise_not(warped_mask)
+        
+        # Composite images
+        bg_cutout = cv2.bitwise_and(bg_img, bg_img, mask=inv_mask)
+        warped_cutout = cv2.bitwise_and(warped_scan, warped_scan, mask=warped_mask)
+        composited = cv2.add(bg_cutout, warped_cutout)
+        
+        return composited, dst_pts, M
+
     def apply_scaling(self, img):
         """2. Random downscale-upscale by a factor between 2 and 4"""
         factor = random.uniform(2.0, 4.0)
@@ -31,6 +66,29 @@ class DocumentDegradation:
         
         img_color_cast = cv2.merge((b, g, r)).astype(np.uint8)
         return img_color_cast
+    
+    def apply_illumination_and_shadows(self, img):
+        """4. Illumination gradient and soft shadows"""
+        h, w = img.shape[:2]
+        
+        # Base gradient
+        gradient = np.ones((h, w), dtype=np.float32)
+        cv2.circle(gradient, (random.randint(0, w), random.randint(0, h)), max(h, w), (random.uniform(0.6, 1.0),), -1)
+        gradient = cv2.GaussianBlur(gradient, (0, 0), sigmaX=max(h, w)/3)
+        
+        # Add random soft shadows (polygons)
+        shadow_mask = np.ones((h, w), dtype=np.float32)
+        for _ in range(random.randint(1, 3)):
+            pts = np.array([[random.randint(0, w), random.randint(0, h)] for _ in range(random.randint(3, 5))])
+            cv2.fillPoly(shadow_mask, [pts], random.uniform(0.4, 0.8))
+            
+        shadow_mask = cv2.GaussianBlur(shadow_mask, (0, 0), sigmaX=random.uniform(50, 150))
+        
+        # Apply masks to image
+        combined_mask = gradient * shadow_mask
+        img_float = img.astype(np.float32) * np.expand_dims(combined_mask, axis=2)
+        
+        return np.clip(img_float, 0, 255).astype(np.uint8)
 
     def apply_blur_and_noise(self, img):
         """5. Gaussian blur followed by Gaussian noise"""
@@ -54,3 +112,4 @@ class DocumentDegradation:
         result, encimg = cv2.imencode('.jpg', img, encode_param)
         decimg = cv2.imdecode(encimg, 1)
         return decimg
+    
