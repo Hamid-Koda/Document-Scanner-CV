@@ -1,3 +1,5 @@
+import torch
+from torch.utils.data import Dataset
 import cv2
 import numpy as np
 import random
@@ -113,3 +115,81 @@ class DocumentDegradation:
         decimg = cv2.imdecode(encimg, 1)
         return decimg
     
+
+class EnhancementDataset(Dataset):
+    def __init__(self, clean_scans, backgrounds, target_size=(256, 256), epoch_size=1000):
+        self.clean_scans = clean_scans
+        self.backgrounds = backgrounds
+        self.target_size = target_size
+        self.epoch_size = epoch_size
+        self.degrader = DocumentDegradation()
+        
+    def __len__(self):
+        # Generate samples on the fly, so epoch size is arbitrary
+        return self.epoch_size
+        
+    def __getitem__(self, idx):
+        scan_img = cv2.imread(random.choice(self.clean_scans))
+        bg_img = cv2.imread(random.choice(self.backgrounds))
+        
+        # 1. Apply pipeline
+        composited, corners, M = self.degrader.apply_perspective_warp(scan_img, bg_img)
+        img = self.degrader.apply_scaling(composited)
+        img = self.degrader.apply_brightness_contrast_color(img)
+        img = self.degrader.apply_illumination_and_shadows(img)
+        img = self.degrader.apply_blur_and_noise(img)
+        img = self.degrader.apply_jpeg_compression(img)
+        
+        # 2. Rectify back to flat rectangle (for Enhancement task)
+        h, w = scan_img.shape[:2]
+        inv_M = np.linalg.inv(M)
+        rectified_degraded = cv2.warpPerspective(img, inv_M, (w, h))
+        
+        # 3. Resize
+        rectified_resized = cv2.resize(rectified_degraded, self.target_size)
+        target_resized = cv2.resize(scan_img, self.target_size)
+        
+        # 4. Normalize and convert to PyTorch tensors (CHW format)
+        input_tensor = torch.from_numpy(rectified_resized).float().permute(2, 0, 1) / 255.0
+        target_tensor = torch.from_numpy(target_resized).float().permute(2, 0, 1) / 255.0
+        
+        return input_tensor, target_tensor
+
+
+class CornerDataset(Dataset):
+    def __init__(self, clean_scans, backgrounds, target_size=(256, 256), epoch_size=1000):
+        self.clean_scans = clean_scans
+        self.backgrounds = backgrounds
+        self.target_size = target_size
+        self.epoch_size = epoch_size
+        self.degrader = DocumentDegradation()
+        
+    def __len__(self):
+        return self.epoch_size
+        
+    def __getitem__(self, idx):
+        scan_img = cv2.imread(random.choice(self.clean_scans))
+        bg_img = cv2.imread(random.choice(self.backgrounds))
+        
+        # 1. Apply pipeline
+        composited, corners, _ = self.degrader.apply_perspective_warp(scan_img, bg_img)
+        img = self.degrader.apply_scaling(composited)
+        img = self.degrader.apply_brightness_contrast_color(img)
+        img = self.degrader.apply_illumination_and_shadows(img)
+        img = self.degrader.apply_blur_and_noise(img)
+        img = self.degrader.apply_jpeg_compression(img)
+        
+        # 2. Resize
+        orig_h, orig_w = img.shape[:2]
+        img_resized = cv2.resize(img, self.target_size)
+        
+        # 3. Normalize corners to [0, 1] range
+        corners_normalized = corners.copy()
+        corners_normalized[:, 0] /= orig_w
+        corners_normalized[:, 1] /= orig_h
+        
+        # 4. Normalize image to PyTorch tensor (CHW format)
+        img_tensor = torch.from_numpy(img_resized).float().permute(2, 0, 1) / 255.0
+        corners_tensor = torch.from_numpy(corners_normalized).float()
+        
+        return img_tensor, corners_tensor
