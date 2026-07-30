@@ -216,3 +216,13 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Ignore datasets and test images
+clean_scans/
+backgrounds/
+*.jpg
+*.png
+*.jpeg
+
+# Ignore trained model weights
+weights/
