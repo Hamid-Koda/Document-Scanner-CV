@@ -97,9 +97,6 @@ def train_enhancement_model():
         # Save model checkpoint
         torch.save(model.state_dict(), f'weights/enhancement_unet_epoch_{epoch+1}.pth')
 
-if __name__ == '__main__':
-    train_enhancement_model() # Commented out until real images are provided
-
 
 def generate_gaussian_heatmaps(coords, target_size, sigma=5.0):
     """
@@ -186,7 +183,8 @@ def train_heatmap_corner_detector():
     for epoch in range(num_epochs):
         model.train()
         running_loss = 0.0
-        for inputs, target_coords in train_loader:
+        
+        for batch_idx, (inputs, target_coords) in enumerate(train_loader):
             inputs, target_coords = inputs.to(device), target_coords.to(device)
             
             # Generate target heatmaps dynamically for the batch
@@ -199,6 +197,16 @@ def train_heatmap_corner_detector():
             loss.backward()
             optimizer.step()
             running_loss += loss.item()
+
+            if batch_idx % 10 == 0:
+                print(f"Approach B - Epoch [{epoch+1}/{num_epochs}] Batch [{batch_idx}/{len(train_loader)}] Loss: {loss.item():.4f}")
             
-        print(f"Approach B - Epoch [{epoch+1}/{num_epochs}] Loss: {running_loss/len(train_loader):.4f}")
+        epoch_loss = running_loss / len(train_loader)
+        print(f"--> Approach B - Epoch {epoch+1} Average Loss: {epoch_loss:.4f}\n")
+        
         torch.save(model.state_dict(), f'weights/heatmap_corner_epoch_{epoch+1}.pth')
+
+if __name__ == '__main__':
+    # train_enhancement_model() 
+    #train_direct_corner_detector()
+    train_heatmap_corner_detector()
