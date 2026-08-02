@@ -76,11 +76,6 @@ def inference_pipeline(model_path, image_path, output_path, device='cpu'):
     cv2.imwrite(output_path, output_img)
     print(f"Enhanced image successfully saved to {output_path}")
 
-if __name__ == '__main__':
-    # Usage example:
-    # inference_pipeline('weights/enhancement_unet_epoch_10.pth', 'test_rectified.jpg', 'output_clean.jpg')
-    pass
-
 
 def calculate_corner_error(pred_coords, target_coords, image_shape):
     """
@@ -171,3 +166,15 @@ def corner_inference_pipeline(model_path, image_path, output_path, is_heatmap=Fa
         
     cv2.imwrite(output_path, output_img)
     print(f"Corner detection visualized and saved to {output_path}")
+
+
+if __name__ == '__main__':
+    test_image_path = 'test_dataset/seungmin-yoon-RyFKQTYZLOg-unsplash_jpg.rf.f5741daad416f51734d2cd996f54a84b.jpg' 
+    
+    print("Testing Direct Corner Detection...")
+    corner_inference_pipeline(
+        model_path='weights/direct_corner_epoch_5.pth', 
+        image_path=test_image_path, 
+        output_path='corner_result_direct.jpg', 
+        is_heatmap=False
+    )
