@@ -130,9 +130,27 @@ class EnhancementDataset(Dataset):
         scan_img = cv2.imread(scan_path)
         assert scan_img is not None, f"❌ Error: Cannot read image at {scan_path}"
         scan_img = cv2.cvtColor(scan_img, cv2.COLOR_BGR2RGB)
-        base_img = cv2.resize(scan_img, self.target_size)
+        
+        # 🎯 تغییر طلایی: آموزش Patch-based 
+        # ۱. رساندن مقیاس عکس به مقیاس زمانِ تست (عرض 800)
+        h, w = scan_img.shape[:2]
+        new_w = 800
+        new_h = int(h * (new_w / w))
+        scan_img = cv2.resize(scan_img, (new_w, new_h))
+        
+        # ۲. بریدن یک تکه‌ی تصادفیِ 256x256 از متن باکیفیت
+        th, tw = self.target_size
+        x = random.randint(0, max(0, new_w - tw))
+        y = random.randint(0, max(0, new_h - th))
+        base_img = scan_img[y:y+th, x:x+tw]
+        
+        # گارد امنیتی
+        if base_img.shape[:2] != self.target_size:
+            base_img = cv2.resize(base_img, self.target_size)
+            
         target_img = base_img.copy()
         
+        # ۳. اعمال نویزها روی تکه‌ی باکیفیت
         img = self.degrader.apply_brightness_contrast_color(base_img)
         img = self.degrader.apply_illumination_and_shadows(img)
         img = self.degrader.apply_blur_and_noise(img)
@@ -140,7 +158,9 @@ class EnhancementDataset(Dataset):
         
         input_tensor = torch.from_numpy(img).float().permute(2, 0, 1) / 255.0
         target_tensor = torch.from_numpy(target_img).float().permute(2, 0, 1) / 255.0
+        
         return input_tensor, target_tensor
+    
 
 class CornerDataset(Dataset):
     def __init__(self, clean_scans, backgrounds, target_size=(256, 256), epoch_size=1000):

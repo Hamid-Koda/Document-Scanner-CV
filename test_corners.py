@@ -14,7 +14,7 @@ model.load_state_dict(torch.load("weights/heatmap_corner_best.pth",
                                  map_location=device))
 model.eval()
 
-img_path = "test_document_on_desk.jpg"
+img_path = "test_image.jpg"
 
 img_bgr = cv2.imread(img_path)
 

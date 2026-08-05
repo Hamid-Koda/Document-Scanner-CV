@@ -77,9 +77,9 @@ if __name__ == '__main__':
         
         end_to_end_pipeline(
             raw_img_path=test_image_path,
-            corner_model_path='weights/direct_corner_best.pth',
+            corner_model_path='weights/heatmap_corner_best.pth',
             enhance_model_path='weights/enhancement_unet_best.pth',
             output_path=output_image_path,
-            is_heatmap=False,
+            is_heatmap=True,
             device=device
         )
