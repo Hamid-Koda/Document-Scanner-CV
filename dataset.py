@@ -9,41 +9,37 @@ class DocumentDegradation:
         pass
 
     def apply_perspective_warp(self, scan_img, bg_img):
-        """1. Realistic & Extreme perspective warp"""
         h, w = scan_img.shape[:2]
         bg_h, bg_w = bg_img.shape[:2]
-        
         src_pts = np.float32([[0, 0], [w, 0], [w, h], [0, h]])
         
-        # نوع زوم را تصادفی انتخاب می‌کنیم
-        zoom_type = random.random()
-        
-        if zoom_type < 0.4:
-            # 40% مواقع: عکس نزدیک
-            margin = 0.10
-        elif zoom_type < 0.8:
-            # 40% مواقع: عکس معمولی
-            margin = 0.15
-        else:
-            # 20% مواقع: عکس از دور
-            margin = 0.18
+        # تضمین هندسیِ شکل با حلقه ارزیابی
+        for _ in range(50):
+            zoom_type = random.random()
+            margin = 0.10 if zoom_type < 0.4 else (0.15 if zoom_type < 0.8 else 0.18)
             
-        left = random.uniform(0.0, margin) * bg_w
-        right = random.uniform(1 - margin, 1.0) * bg_w
-        top = random.uniform(0.0, margin) * bg_h
-        bottom = random.uniform(1 - margin, 1.0) * bg_h
-        
-        # انحراف‌های تصادفی برای ایجاد چرخش و کج‌شدگی شدید
-        dev_x = (right - left) * 0.25
-        dev_y = (bottom - top) * 0.25
-        
-        pt1 = [max(0, left + random.uniform(-dev_x, dev_x)), max(0, top + random.uniform(-dev_y, dev_y))]
-        pt2 = [min(bg_w, right + random.uniform(-dev_x, dev_x)), max(0, top + random.uniform(-dev_y, dev_y))]
-        pt3 = [min(bg_w, right + random.uniform(-dev_x, dev_x)), min(bg_h, bottom + random.uniform(-dev_y, dev_y))]
-        pt4 = [max(0, left + random.uniform(-dev_x, dev_x)), min(bg_h, bottom + random.uniform(-dev_y, dev_y))]
-        
-        dst_pts = np.float32([pt1, pt2, pt3, pt4])
-        
+            left = random.uniform(0.0, margin) * bg_w
+            right = random.uniform(1 - margin, 1.0) * bg_w
+            top = random.uniform(0.0, margin) * bg_h
+            bottom = random.uniform(1 - margin, 1.0) * bg_h
+            
+            dev_x = (right - left) * 0.25
+            dev_y = (bottom - top) * 0.25
+            
+            pt1 = [max(0, left + random.uniform(-dev_x, dev_x)), max(0, top + random.uniform(-dev_y, dev_y))]
+            pt2 = [min(bg_w, right + random.uniform(-dev_x, dev_x)), max(0, top + random.uniform(-dev_y, dev_y))]
+            pt3 = [min(bg_w, right + random.uniform(-dev_x, dev_x)), min(bg_h, bottom + random.uniform(-dev_y, dev_y))]
+            pt4 = [max(0, left + random.uniform(-dev_x, dev_x)), min(bg_h, bottom + random.uniform(-dev_y, dev_y))]
+            
+            dst_pts = np.float32([pt1, pt2, pt3, pt4])
+            
+            # فیلتر حیاتی: فقط چهارضلعی‌های محدب و منطقی پذیرفته می‌شوند
+            if cv2.isContourConvex(dst_pts.astype(int)):
+                break
+        else:
+            # در صورت عدم موفقیت پس از ۵۰ بار، یک مستطیل امن تولید می‌شود
+            dst_pts = np.float32([[left, top], [right, top], [right, bottom], [left, bottom]])
+            
         M = cv2.getPerspectiveTransform(src_pts, dst_pts)
         warped_scan = cv2.warpPerspective(scan_img, M, (bg_w, bg_h))
         
@@ -67,12 +63,10 @@ class DocumentDegradation:
         alpha = random.uniform(0.7, 1.3) 
         beta = random.randint(-40, 40)
         adjusted = cv2.convertScaleAbs(img, alpha=alpha, beta=beta)
-        
         img_float = adjusted.astype(np.float32)
         b, g, r = cv2.split(img_float)
         b = np.clip(b * random.uniform(0.8, 1.2), 0, 255)
         r = np.clip(r * random.uniform(0.8, 1.2), 0, 255)
-        
         return cv2.merge((b, g, r)).astype(np.uint8)
     
     def apply_illumination_and_shadows(self, img):
@@ -80,12 +74,10 @@ class DocumentDegradation:
         gradient = np.ones((h, w), dtype=np.float32)
         cv2.circle(gradient, (random.randint(0, w), random.randint(0, h)), max(h, w), (random.uniform(0.5, 1.0),), -1)
         gradient = cv2.GaussianBlur(gradient, (0, 0), sigmaX=max(h, w)/3)
-        
         shadow_mask = np.ones((h, w), dtype=np.float32)
         for _ in range(random.randint(1, 4)):
             pts = np.array([[random.randint(0, w), random.randint(0, h)] for _ in range(random.randint(3, 5))])
             cv2.fillPoly(shadow_mask, [pts], random.uniform(0.3, 0.8))
-            
         shadow_mask = cv2.GaussianBlur(shadow_mask, (0, 0), sigmaX=random.uniform(50, 150))
         img_float = img.astype(np.float32) * np.expand_dims(gradient * shadow_mask, axis=2)
         return np.clip(img_float, 0, 255).astype(np.uint8)
@@ -113,7 +105,6 @@ class DocumentDegradation:
             blurred = cv2.filter2D(img, -1, kernel)
         else:
             blurred = cv2.GaussianBlur(img, (random.choice([3, 5]), random.choice([3, 5])), 0)
-        
         row, col, ch = blurred.shape
         gauss = np.random.normal(0, random.uniform(15, 35), (row, col, ch)).reshape(row, col, ch)
         noisy = blurred + gauss
@@ -137,26 +128,18 @@ class EnhancementDataset(Dataset):
     def __getitem__(self, idx):
         scan_path = random.choice(self.clean_scans)
         scan_img = cv2.imread(scan_path)
-        
         assert scan_img is not None, f"❌ Error: Cannot read image at {scan_path}"
         scan_img = cv2.cvtColor(scan_img, cv2.COLOR_BGR2RGB)
-        
-        # ✅ راه‌حل طلایی: اول عکسِ غول‌پیکر را کوچک می‌کنیم!
         base_img = cv2.resize(scan_img, self.target_size)
-        
-        # هدف (Target): همان عکسِ تمیزِ کوچک‌شده
         target_img = base_img.copy()
         
-        # ورودی (Input): حالا نویزها و سایه‌ها را روی عکسِ ۲۵۶ در ۲۵۶ اعمال می‌کنیم
         img = self.degrader.apply_brightness_contrast_color(base_img)
         img = self.degrader.apply_illumination_and_shadows(img)
         img = self.degrader.apply_blur_and_noise(img)
         img = self.degrader.apply_jpeg_compression(img)
         
-        # تبدیل به تنسور
         input_tensor = torch.from_numpy(img).float().permute(2, 0, 1) / 255.0
         target_tensor = torch.from_numpy(target_img).float().permute(2, 0, 1) / 255.0
-        
         return input_tensor, target_tensor
 
 class CornerDataset(Dataset):
@@ -171,17 +154,14 @@ class CornerDataset(Dataset):
         return self.epoch_size
         
     def __getitem__(self, idx):
-        # خواندن عکس اصلی با کنترل امنیتی
         scan_path = random.choice(self.clean_scans)
         scan_img = cv2.imread(scan_path)
         assert scan_img is not None, f"❌ Error: Cannot read scan at {scan_path}"
         
-        # خواندن پس‌زمینه با کنترل امنیتی
         bg_path = random.choice(self.backgrounds)
         bg_img = cv2.imread(bg_path)
         assert bg_img is not None, f"❌ Error: Cannot read background at {bg_path}"
         
-        # ✅ راه‌حل طلایی: کوچک کردن عکس‌ها قبل از اعمال پرسپکتیو و سایه‌های سنگین
         scan_img = cv2.resize(scan_img, (512, 512))
         bg_img = cv2.resize(bg_img, (512, 512))
         

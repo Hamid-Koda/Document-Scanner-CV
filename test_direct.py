@@ -14,7 +14,7 @@ def test_direct_model():
     model.eval()
 
     # خواندن عکسِ تست (عکسی که روی میز یا پس‌زمینه است)
-    img_path = "test_document_on_desk.jpg" 
+    img_path = "test_image.jpg" 
     img_bgr = cv2.imread(img_path)
     if img_bgr is None:
         raise Exception(f"❌ Error: Image '{img_path}' not found.")

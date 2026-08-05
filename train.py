@@ -8,9 +8,6 @@ import glob
 from dataset import EnhancementDataset, CornerDataset
 from model import EnhancementUNet, DirectCornerRegressor, HeatmapCornerRegressor
 
-# -----------------------------------------
-#   (Loss و Gaussian)
-# -----------------------------------------
 class EdgeAwareLoss(nn.Module):
     def __init__(self, alpha=0.5):
         super().__init__()
@@ -46,15 +43,14 @@ def generate_gaussian_heatmaps(coords, target_size, sigma=5.0):
     squared_dist = (x_grid - xs)**2 + (y_grid - ys)**2
     return torch.exp(-squared_dist / (2 * sigma**2))
 
-# -----------------------------------------
-#  A: Direct Regressor
-# -----------------------------------------
 def train_direct_corner_detector():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = DirectCornerRegressor().to(device)
-    criterion = nn.L1Loss()
-    optimizer = optim.Adam(model.parameters(), lr=1e-4)
     
+    # 🎯 استفاده از Huber Loss برای جلوگیری از انفجار گرادیان‌ها
+    criterion = nn.SmoothL1Loss()
+    
+    optimizer = optim.Adam(model.parameters(), lr=1e-4)
     scaler = torch.amp.GradScaler('cuda')
 
     clean_scans_paths = glob.glob("clean_scans/*.*")
@@ -113,7 +109,6 @@ def train_direct_corner_detector():
         }
         torch.save(checkpoint_data, checkpoint_path)
         
-        # لاجیک Early Stopping
         if epoch_loss < best_loss:
             best_loss = epoch_loss
             patience_counter = 0
@@ -132,7 +127,7 @@ def train_direct_corner_detector():
 def train_heatmap_corner_detector():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = HeatmapCornerRegressor().to(device)
-    criterion = nn.MSELoss()
+    criterion = nn.BCEWithLogitsLoss()
     optimizer = optim.Adam(model.parameters(), lr=1e-4)
     scaler = torch.amp.GradScaler('cuda')
 
@@ -174,7 +169,7 @@ def train_heatmap_corner_detector():
             
             with torch.amp.autocast('cuda'):
                 outputs = model(inputs)
-                loss = criterion(torch.sigmoid(outputs), target_heatmaps) 
+                loss = criterion(outputs, target_heatmaps) 
             
             scaler.scale(loss).backward()
             scaler.step(optimizer)
@@ -287,5 +282,5 @@ def train_enhancement_model():
 
 if __name__ == '__main__':
     #train_enhancement_model() 
-    train_direct_corner_detector()
-    #train_heatmap_corner_detector()
+    #train_direct_corner_detector()
+    train_heatmap_corner_detector()
