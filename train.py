@@ -52,7 +52,7 @@ def generate_gaussian_heatmaps(coords, target_size, sigma=5.0):
 def train_direct_corner_detector():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = DirectCornerRegressor().to(device)
-    criterion = nn.MSELoss()
+    criterion = nn.L1Loss()
     optimizer = optim.Adam(model.parameters(), lr=1e-4)
     
     scaler = torch.amp.GradScaler('cuda')
@@ -132,7 +132,7 @@ def train_direct_corner_detector():
 def train_heatmap_corner_detector():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = HeatmapCornerRegressor().to(device)
-    criterion = nn.BCEWithLogitsLoss()
+    criterion = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=1e-4)
     scaler = torch.amp.GradScaler('cuda')
 
@@ -168,13 +168,13 @@ def train_heatmap_corner_detector():
         
         for batch_idx, (inputs, target_coords) in enumerate(train_loader):
             inputs, target_coords = inputs.to(device), target_coords.to(device)
-            target_heatmaps = generate_gaussian_heatmaps(target_coords, target_size, sigma=5.0)
+            target_heatmaps = generate_gaussian_heatmaps(target_coords, target_size, sigma=15.0)
             
             optimizer.zero_grad()
             
             with torch.amp.autocast('cuda'):
                 outputs = model(inputs)
-                loss = criterion(outputs, target_heatmaps)
+                loss = criterion(torch.sigmoid(outputs), target_heatmaps) 
             
             scaler.scale(loss).backward()
             scaler.step(optimizer)
@@ -207,7 +207,85 @@ def train_heatmap_corner_detector():
                 print("!!! Early stopping triggered. Training finished. !!!")
                 break
 
+
+def train_enhancement_model():
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model = EnhancementUNet().to(device)
+    
+    criterion = EdgeAwareLoss(alpha=0.15).to(device)
+    optimizer = optim.Adam(model.parameters(), lr=1e-4)
+    scaler = torch.amp.GradScaler('cuda')
+
+    clean_scans_paths = glob.glob("clean_scans/*.*")
+    
+    # تله شماره صفر: چک کردن پیدا شدن فایل‌ها
+    print(f"📸 Total clean scans found: {len(clean_scans_paths)}")
+    if len(clean_scans_paths) == 0:
+        print("❌ Error: No images found!")
+        return
+
+    # باگ برطرف شد: دیگر background_paths را پاس نمی‌دهیم
+    train_dataset = EnhancementDataset(clean_scans_paths, epoch_size=1500)
+    
+    print(f"✅ Dataset instantiated. Length: {len(train_dataset)}")
+
+    # تله شماره یک: تست کردن خودِ دیتاست (آیا عکس خوانده می‌شود؟)
+    print("⏳ Testing dataset getitem...")
+    x, y = train_dataset[0]
+    print(f"✅ Dataset OK! Input shape: {x.shape}, Target shape: {y.shape}")
+
+    train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True, num_workers=0)
+
+    # تله شماره دو: تست کردن DataLoader
+    print("⏳ Testing DataLoader...")
+    x_batch, y_batch = next(iter(train_loader))
+    print(f"✅ DataLoader OK! Batch shape: {x_batch.shape}")
+
+    num_epochs = 20
+    os.makedirs('weights', exist_ok=True)
+    best_model_path = 'weights/enhancement_unet_best.pth'
+    best_loss = float('inf')
+    patience = 5
+    patience_counter = 0
+
+    print("🚀 Starting Enhancement Model Training (RGB + L1Loss + num_workers=0)...")
+    
+    for epoch in range(num_epochs):
+        model.train()
+        running_loss = 0.0
+        
+        for batch_idx, (inputs, targets) in enumerate(train_loader):
+            inputs, targets = inputs.to(device), targets.to(device)
+            optimizer.zero_grad()
+            
+            with torch.amp.autocast('cuda'):
+                outputs = model(inputs)
+                loss = criterion(outputs, targets)
+            
+            scaler.scale(loss).backward()
+            scaler.step(optimizer)
+            scaler.update()
+            
+            running_loss += loss.item()
+            if batch_idx % 10 == 0:
+                print(f"Enhancement - Epoch [{epoch+1}/{num_epochs}] Batch [{batch_idx}/{len(train_loader)}] Loss: {loss.item():.4f}")
+                
+        epoch_loss = running_loss / len(train_loader)
+        print(f"--> Enhancement - Epoch [{epoch+1}/{num_epochs}] Average Loss: {epoch_loss:.4f}\n")
+        
+        if epoch_loss < best_loss:
+            best_loss = epoch_loss
+            patience_counter = 0
+            torch.save(model.state_dict(), best_model_path)
+            print(f"*** New best model saved with loss: {best_loss:.4f} ***")
+        else:
+            patience_counter += 1
+            if patience_counter >= patience:
+                print("!!! Early stopping triggered. Training finished. !!!")
+                break
+
+
 if __name__ == '__main__':
-    # train_enhancement_model() 
+    #train_enhancement_model() 
     train_direct_corner_detector()
     #train_heatmap_corner_detector()

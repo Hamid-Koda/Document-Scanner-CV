@@ -9,22 +9,38 @@ class DocumentDegradation:
         pass
 
     def apply_perspective_warp(self, scan_img, bg_img):
-        """1. Realistic perspective warp with strict margins"""
+        """1. Realistic & Extreme perspective warp"""
         h, w = scan_img.shape[:2]
         bg_h, bg_w = bg_img.shape[:2]
         
         src_pts = np.float32([[0, 0], [w, 0], [w, h], [0, h]])
         
-        margin_x = int(bg_w * 0.25) 
-        margin_y = int(bg_h * 0.25)
+        # نوع زوم را تصادفی انتخاب می‌کنیم
+        zoom_type = random.random()
         
-        base_w, base_h = bg_w - 2 * margin_x, bg_h - 2 * margin_y
-        max_dev_x, max_dev_y = base_w * 0.2, base_h * 0.2
-
-        pt1 = [margin_x + random.uniform(-max_dev_x, max_dev_x), margin_y + random.uniform(-max_dev_y, max_dev_y)]
-        pt2 = [bg_w - margin_x + random.uniform(-max_dev_x, max_dev_x), margin_y + random.uniform(-max_dev_y, max_dev_y)]
-        pt3 = [bg_w - margin_x + random.uniform(-max_dev_x, max_dev_x), bg_h - margin_y + random.uniform(-max_dev_y, max_dev_y)]
-        pt4 = [margin_x + random.uniform(-max_dev_x, max_dev_x), bg_h - margin_y + random.uniform(-max_dev_y, max_dev_y)]
+        if zoom_type < 0.4:
+            # 40% مواقع: عکس نزدیک
+            margin = 0.10
+        elif zoom_type < 0.8:
+            # 40% مواقع: عکس معمولی
+            margin = 0.15
+        else:
+            # 20% مواقع: عکس از دور
+            margin = 0.18
+            
+        left = random.uniform(0.0, margin) * bg_w
+        right = random.uniform(1 - margin, 1.0) * bg_w
+        top = random.uniform(0.0, margin) * bg_h
+        bottom = random.uniform(1 - margin, 1.0) * bg_h
+        
+        # انحراف‌های تصادفی برای ایجاد چرخش و کج‌شدگی شدید
+        dev_x = (right - left) * 0.25
+        dev_y = (bottom - top) * 0.25
+        
+        pt1 = [max(0, left + random.uniform(-dev_x, dev_x)), max(0, top + random.uniform(-dev_y, dev_y))]
+        pt2 = [min(bg_w, right + random.uniform(-dev_x, dev_x)), max(0, top + random.uniform(-dev_y, dev_y))]
+        pt3 = [min(bg_w, right + random.uniform(-dev_x, dev_x)), min(bg_h, bottom + random.uniform(-dev_y, dev_y))]
+        pt4 = [max(0, left + random.uniform(-dev_x, dev_x)), min(bg_h, bottom + random.uniform(-dev_y, dev_y))]
         
         dst_pts = np.float32([pt1, pt2, pt3, pt4])
         
@@ -42,55 +58,52 @@ class DocumentDegradation:
         return composited, dst_pts, M
 
     def apply_scaling(self, img):
-        factor = random.uniform(2.0, 4.0)
+        factor = random.uniform(1.5, 4.0)
         h, w = img.shape[:2]
         downscaled = cv2.resize(img, (int(w / factor), int(h / factor)), interpolation=cv2.INTER_AREA)
         return cv2.resize(downscaled, (w, h), interpolation=cv2.INTER_CUBIC)
 
     def apply_brightness_contrast_color(self, img):
-        alpha = random.uniform(0.8, 1.2) 
-        beta = random.randint(-30, 30)
+        alpha = random.uniform(0.7, 1.3) 
+        beta = random.randint(-40, 40)
         adjusted = cv2.convertScaleAbs(img, alpha=alpha, beta=beta)
         
         img_float = adjusted.astype(np.float32)
         b, g, r = cv2.split(img_float)
-        b = np.clip(b * random.uniform(0.9, 1.1), 0, 255)
-        r = np.clip(r * random.uniform(0.9, 1.1), 0, 255)
+        b = np.clip(b * random.uniform(0.8, 1.2), 0, 255)
+        r = np.clip(r * random.uniform(0.8, 1.2), 0, 255)
         
         return cv2.merge((b, g, r)).astype(np.uint8)
     
     def apply_illumination_and_shadows(self, img):
         h, w = img.shape[:2]
         gradient = np.ones((h, w), dtype=np.float32)
-        cv2.circle(gradient, (random.randint(0, w), random.randint(0, h)), max(h, w), (random.uniform(0.6, 1.0),), -1)
+        cv2.circle(gradient, (random.randint(0, w), random.randint(0, h)), max(h, w), (random.uniform(0.5, 1.0),), -1)
         gradient = cv2.GaussianBlur(gradient, (0, 0), sigmaX=max(h, w)/3)
         
         shadow_mask = np.ones((h, w), dtype=np.float32)
-        for _ in range(random.randint(1, 3)):
+        for _ in range(random.randint(1, 4)):
             pts = np.array([[random.randint(0, w), random.randint(0, h)] for _ in range(random.randint(3, 5))])
-            cv2.fillPoly(shadow_mask, [pts], random.uniform(0.4, 0.8))
+            cv2.fillPoly(shadow_mask, [pts], random.uniform(0.3, 0.8))
             
         shadow_mask = cv2.GaussianBlur(shadow_mask, (0, 0), sigmaX=random.uniform(50, 150))
         img_float = img.astype(np.float32) * np.expand_dims(gradient * shadow_mask, axis=2)
         return np.clip(img_float, 0, 255).astype(np.uint8)
 
     def apply_occlusions(self, img):
-        """NEW: Simulates fingers, thumbs, or random objects overlapping the edges"""
-        if random.random() < 0.5: # 50% chance
+        if random.random() < 0.5: 
             h, w = img.shape[:2]
             center_x = random.choice([0, w]) + random.randint(-50, 50)
             center_y = random.randint(0, h)
-            axes = (random.randint(30, 80), random.randint(30, 80))
+            axes = (random.randint(30, 100), random.randint(30, 100))
             color = (random.randint(80, 180), random.randint(100, 200), random.randint(120, 220)) 
             cv2.ellipse(img, (center_x, center_y), axes, random.randint(0, 360), 0, 360, color, -1)
             img = cv2.GaussianBlur(img, (7, 7), 0)
         return img
 
     def apply_blur_and_noise(self, img):
-        """Fix: Motion Blur + Heavy ISO Noise"""
         if random.random() < 0.3:
-            # Motion Blur
-            size = random.randint(5, 11)
+            size = random.randint(5, 15)
             kernel = np.zeros((size, size))
             if random.random() < 0.5:
                 kernel[int((size-1)/2), :] = np.ones(size)
@@ -99,24 +112,21 @@ class DocumentDegradation:
             kernel = kernel / size
             blurred = cv2.filter2D(img, -1, kernel)
         else:
-            # Standard Blur
             blurred = cv2.GaussianBlur(img, (random.choice([3, 5]), random.choice([3, 5])), 0)
         
-        # ISO Noise
         row, col, ch = blurred.shape
-        gauss = np.random.normal(0, random.uniform(10, 25), (row, col, ch)).reshape(row, col, ch)
+        gauss = np.random.normal(0, random.uniform(15, 35), (row, col, ch)).reshape(row, col, ch)
         noisy = blurred + gauss
         return np.clip(noisy, 0, 255).astype(np.uint8)
 
     def apply_jpeg_compression(self, img):
-        encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), random.randint(30, 80)]
+        encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), random.randint(20, 70)]
         result, encimg = cv2.imencode('.jpg', img, encode_param)
         return cv2.imdecode(encimg, 1)
 
 class EnhancementDataset(Dataset):
-    def __init__(self, clean_scans, backgrounds, target_size=(256, 256), epoch_size=1000):
+    def __init__(self, clean_scans, target_size=(256, 256), epoch_size=1000):
         self.clean_scans = clean_scans
-        self.backgrounds = backgrounds
         self.target_size = target_size
         self.epoch_size = epoch_size
         self.degrader = DocumentDegradation()
@@ -125,26 +135,27 @@ class EnhancementDataset(Dataset):
         return self.epoch_size
         
     def __getitem__(self, idx):
-        scan_img = cv2.imread(random.choice(self.clean_scans))
-        bg_img = cv2.imread(random.choice(self.backgrounds))
+        scan_path = random.choice(self.clean_scans)
+        scan_img = cv2.imread(scan_path)
         
-        composited, corners, M = self.degrader.apply_perspective_warp(scan_img, bg_img)
-        img = self.degrader.apply_scaling(composited)
-        img = self.degrader.apply_brightness_contrast_color(img)
+        assert scan_img is not None, f"❌ Error: Cannot read image at {scan_path}"
+        scan_img = cv2.cvtColor(scan_img, cv2.COLOR_BGR2RGB)
+        
+        # ✅ راه‌حل طلایی: اول عکسِ غول‌پیکر را کوچک می‌کنیم!
+        base_img = cv2.resize(scan_img, self.target_size)
+        
+        # هدف (Target): همان عکسِ تمیزِ کوچک‌شده
+        target_img = base_img.copy()
+        
+        # ورودی (Input): حالا نویزها و سایه‌ها را روی عکسِ ۲۵۶ در ۲۵۶ اعمال می‌کنیم
+        img = self.degrader.apply_brightness_contrast_color(base_img)
         img = self.degrader.apply_illumination_and_shadows(img)
-        img = self.degrader.apply_occlusions(img) 
         img = self.degrader.apply_blur_and_noise(img)
         img = self.degrader.apply_jpeg_compression(img)
         
-        h, w = scan_img.shape[:2]
-        inv_M = np.linalg.inv(M)
-        rectified_degraded = cv2.warpPerspective(img, inv_M, (w, h))
-        
-        rectified_resized = cv2.resize(rectified_degraded, self.target_size)
-        target_resized = cv2.resize(scan_img, self.target_size)
-        
-        input_tensor = torch.from_numpy(rectified_resized).float().permute(2, 0, 1) / 255.0
-        target_tensor = torch.from_numpy(target_resized).float().permute(2, 0, 1) / 255.0
+        # تبدیل به تنسور
+        input_tensor = torch.from_numpy(img).float().permute(2, 0, 1) / 255.0
+        target_tensor = torch.from_numpy(target_img).float().permute(2, 0, 1) / 255.0
         
         return input_tensor, target_tensor
 
@@ -160,14 +171,27 @@ class CornerDataset(Dataset):
         return self.epoch_size
         
     def __getitem__(self, idx):
-        scan_img = cv2.imread(random.choice(self.clean_scans))
-        bg_img = cv2.imread(random.choice(self.backgrounds))
+        # خواندن عکس اصلی با کنترل امنیتی
+        scan_path = random.choice(self.clean_scans)
+        scan_img = cv2.imread(scan_path)
+        assert scan_img is not None, f"❌ Error: Cannot read scan at {scan_path}"
+        
+        # خواندن پس‌زمینه با کنترل امنیتی
+        bg_path = random.choice(self.backgrounds)
+        bg_img = cv2.imread(bg_path)
+        assert bg_img is not None, f"❌ Error: Cannot read background at {bg_path}"
+        
+        # ✅ راه‌حل طلایی: کوچک کردن عکس‌ها قبل از اعمال پرسپکتیو و سایه‌های سنگین
+        scan_img = cv2.resize(scan_img, (512, 512))
+        bg_img = cv2.resize(bg_img, (512, 512))
+        
+        scan_img = cv2.cvtColor(scan_img, cv2.COLOR_BGR2RGB) 
+        bg_img = cv2.cvtColor(bg_img, cv2.COLOR_BGR2RGB)
         
         composited, corners, _ = self.degrader.apply_perspective_warp(scan_img, bg_img)
         img = self.degrader.apply_scaling(composited)
         img = self.degrader.apply_brightness_contrast_color(img)
         img = self.degrader.apply_illumination_and_shadows(img)
-        img = self.degrader.apply_occlusions(img) 
         img = self.degrader.apply_blur_and_noise(img)
         img = self.degrader.apply_jpeg_compression(img)
         

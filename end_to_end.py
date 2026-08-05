@@ -77,11 +77,22 @@ def end_to_end_pipeline(raw_img_path, corner_model_path, enhance_model_path, out
     print(f"✅ End-to-End scan successful! Saved to {output_path}")
 
 if __name__ == '__main__':
-    # Usage Example (Make sure weights exist before running):
-    # end_to_end_pipeline(
-    #     raw_img_path='real_test_photo.jpg',
-    #     corner_model_path='weights/direct_corner_epoch_10.pth',
-    #     enhance_model_path='weights/enhancement_unet_epoch_10.pth',
-    #     output_path='final_clean_scan.jpg'
-    # )
-    pass
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    print(f"Using device: {device}")
+    
+    test_image_path = 'test_image.jpg' 
+    output_image_path = 'final_clean_scan.jpg'
+    
+    if not os.path.exists(test_image_path):
+        print(f"❌ Error: Please put an image named '{test_image_path}' in the folder.")
+    else:
+        print("🚀 Starting End-to-End Document Scanner...")
+        
+        end_to_end_pipeline(
+            raw_img_path=test_image_path,
+            corner_model_path='weights/direct_corner_best.pth',
+            enhance_model_path='weights/enhancement_unet_best.pth',
+            output_path=output_image_path,
+            is_heatmap=False,
+            device=device
+        )

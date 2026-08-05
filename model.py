@@ -3,19 +3,22 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class DoubleConv(nn.Module):
-    """(Conv2d => ReLU => Conv2d => ReLU) block"""
+    """(Conv2d => BatchNorm => ReLU => Conv2d => BatchNorm => ReLU) block"""
     def __init__(self, in_channels, out_channels):
         super().__init__()
         self.double_conv = nn.Sequential(
-            nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1),
+            nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1, bias=False),
+            nn.BatchNorm2d(out_channels),
             nn.ReLU(inplace=True),
-            nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1),
+            nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1, bias=False),
+            nn.BatchNorm2d(out_channels),
             nn.ReLU(inplace=True)
         )
 
     def forward(self, x):
         return self.double_conv(x)
 
+    
 class EnhancementUNet(nn.Module):
     def __init__(self, in_channels=3, out_channels=3):
         super().__init__()
@@ -28,7 +31,7 @@ class EnhancementUNet(nn.Module):
         
         # Bottleneck + Dropout
         self.bottleneck = DoubleConv(256, 512)
-        self.dropout = nn.Dropout2d(p=0.5) 
+        self.dropout = nn.Dropout2d(p=0.1) 
         
         self.upconv3 = nn.ConvTranspose2d(512, 256, kernel_size=2, stride=2)
         self.dec3 = DoubleConv(512, 256)
@@ -81,14 +84,11 @@ class DirectCornerRegressor(nn.Module):
         )
 
         self.regressor = nn.Sequential(
-            nn.AdaptiveAvgPool2d((1, 1)),
             nn.Flatten(),
-            nn.Linear(512, 256),
+            nn.Linear(512 * 8 * 8, 512),
             nn.ReLU(inplace=True),
-            nn.Dropout(p=0.5),
-            nn.Linear(256, 128),
+            nn.Linear(512, 128),
             nn.ReLU(inplace=True),
-            nn.Dropout(p=0.5), 
             nn.Linear(128, 8),
             nn.Sigmoid()
         )
