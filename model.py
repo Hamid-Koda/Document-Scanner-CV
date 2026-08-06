@@ -27,9 +27,7 @@ class EnhancementUNet(nn.Module):
         self.pool3 = nn.MaxPool2d(2)
         
         self.bottleneck = DoubleConv(256, 512)
-        self.dropout = nn.Dropout2d(p=0.1) 
         
-        # 🎯 جایگزینی لایه‌های مخرب با Bilinear Upsampling
         self.upconv3 = nn.Sequential(
             nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True),
             nn.Conv2d(512, 256, kernel_size=3, padding=1)
@@ -57,7 +55,7 @@ class EnhancementUNet(nn.Module):
         e3 = self.enc3(self.pool2(e2))
         
         b = self.bottleneck(self.pool3(e3))
-        b = self.dropout(b) 
+        # پاس دادن مستقیم تنسور بدون Dropout
         
         d3 = self.upconv3(b)
         d3 = torch.cat([e3, d3], dim=1)
@@ -73,6 +71,7 @@ class EnhancementUNet(nn.Module):
         
         out = self.out_conv(d1)
         return self.sigmoid(out)
+    
 
 class DirectCornerRegressor(nn.Module):
     def __init__(self, in_channels=3):

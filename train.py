@@ -1,12 +1,14 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, random_split
 import torch.nn.functional as F
 import os
 import glob
+import matplotlib.pyplot as plt
 from dataset import EnhancementDataset, CornerDataset
 from model import EnhancementUNet, DirectCornerRegressor, HeatmapCornerRegressor
+
 
 class EdgeAwareLoss(nn.Module):
     def __init__(self, alpha=0.5):
@@ -203,6 +205,9 @@ def train_heatmap_corner_detector():
                 break
 
 
+from torch.utils.data import random_split
+import matplotlib.pyplot as plt
+
 def train_enhancement_model():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = EnhancementUNet().to(device)
@@ -212,42 +217,33 @@ def train_enhancement_model():
     scaler = torch.amp.GradScaler('cuda')
 
     clean_scans_paths = glob.glob("clean_scans/*.*")
-    
-    # تله شماره صفر: چک کردن پیدا شدن فایل‌ها
-    print(f"📸 Total clean scans found: {len(clean_scans_paths)}")
     if len(clean_scans_paths) == 0:
         print("❌ Error: No images found!")
         return
 
-    # باگ برطرف شد: دیگر background_paths را پاس نمی‌دهیم
-    train_dataset = EnhancementDataset(clean_scans_paths, epoch_size=1500)
+    full_dataset = EnhancementDataset(clean_scans_paths, epoch_size=1500)
     
-    print(f"✅ Dataset instantiated. Length: {len(train_dataset)}")
-
-    # تله شماره یک: تست کردن خودِ دیتاست (آیا عکس خوانده می‌شود؟)
-    print("⏳ Testing dataset getitem...")
-    x, y = train_dataset[0]
-    print(f"✅ Dataset OK! Input shape: {x.shape}, Target shape: {y.shape}")
+    train_size = int(0.8 * len(full_dataset))
+    val_size = len(full_dataset) - train_size
+    train_dataset, val_dataset = random_split(full_dataset, [train_size, val_size])
 
     train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True, num_workers=0)
-
-    # تله شماره دو: تست کردن DataLoader
-    print("⏳ Testing DataLoader...")
-    x_batch, y_batch = next(iter(train_loader))
-    print(f"✅ DataLoader OK! Batch shape: {x_batch.shape}")
+    val_loader = DataLoader(val_dataset, batch_size=16, shuffle=False, num_workers=0)
 
     num_epochs = 20
     os.makedirs('weights', exist_ok=True)
     best_model_path = 'weights/enhancement_unet_best.pth'
-    best_loss = float('inf')
-    patience = 5
-    patience_counter = 0
+    best_val_loss = float('inf')
+    
+    train_losses = []
+    val_losses = []
 
-    print("🚀 Starting Enhancement Model Training (RGB + L1Loss + num_workers=0)...")
+    print("🚀 Starting Enhancement Model Training with Train/Val Split...")
     
     for epoch in range(num_epochs):
+        # فاز آموزش
         model.train()
-        running_loss = 0.0
+        running_train_loss = 0.0
         
         for batch_idx, (inputs, targets) in enumerate(train_loader):
             inputs, targets = inputs.to(device), targets.to(device)
@@ -261,23 +257,41 @@ def train_enhancement_model():
             scaler.step(optimizer)
             scaler.update()
             
-            running_loss += loss.item()
-            if batch_idx % 10 == 0:
-                print(f"Enhancement - Epoch [{epoch+1}/{num_epochs}] Batch [{batch_idx}/{len(train_loader)}] Loss: {loss.item():.4f}")
+            running_train_loss += loss.item()
                 
-        epoch_loss = running_loss / len(train_loader)
-        print(f"--> Enhancement - Epoch [{epoch+1}/{num_epochs}] Average Loss: {epoch_loss:.4f}\n")
+        epoch_train_loss = running_train_loss / len(train_loader)
+        train_losses.append(epoch_train_loss)
         
-        if epoch_loss < best_loss:
-            best_loss = epoch_loss
-            patience_counter = 0
+        model.eval()
+        running_val_loss = 0.0
+        with torch.no_grad():
+            for inputs, targets in val_loader:
+                inputs, targets = inputs.to(device), targets.to(device)
+                with torch.amp.autocast('cuda'):
+                    outputs = model(inputs)
+                    loss = criterion(outputs, targets)
+                running_val_loss += loss.item()
+                
+        epoch_val_loss = running_val_loss / len(val_loader)
+        val_losses.append(epoch_val_loss)
+
+        print(f"Epoch [{epoch+1}/{num_epochs}] | Train Loss: {epoch_train_loss:.4f} | Val Loss: {epoch_val_loss:.4f}")
+        
+        if epoch_val_loss < best_val_loss:
+            best_val_loss = epoch_val_loss
             torch.save(model.state_dict(), best_model_path)
-            print(f"*** New best model saved with loss: {best_loss:.4f} ***")
-        else:
-            patience_counter += 1
-            if patience_counter >= patience:
-                print("!!! Early stopping triggered. Training finished. !!!")
-                break
+            print(f"*** New best model saved (Val Loss: {best_val_loss:.4f}) ***")
+
+    plt.figure(figsize=(10, 6))
+    plt.plot(range(1, num_epochs + 1), train_losses, label='Train Loss')
+    plt.plot(range(1, num_epochs + 1), val_losses, label='Validation Loss')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss (EdgeAware)')
+    plt.title('Training and Validation Loss over Epochs')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig('loss_plot.png')
+    print("✅ Training complete. Loss plot saved as 'loss_plot.png'.")
 
 
 if __name__ == '__main__':
