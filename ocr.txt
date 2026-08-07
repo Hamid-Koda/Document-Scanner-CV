@@ -1,198 +1,177 @@
-⏳ Loading EasyOCR model... (First run may download model files)
-Neither CUDA nor MPS are available - defaulting to CPU. Note: This module is much faster with a GPU.
-Downloading detection model, please wait. This may take several minutes depending upon your network connection.
-Progress: |██████████████████████████████████████████████████| 100.0% CompleteDownloading recognition model, please wait. This may take several minutes depending upon your network connection.
-Progress: |██████████████████████████████████████████████████| 100.0% Complete
 ======================================================================
 Document        | Version              | Confidence Score (%)
 ======================================================================
 C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   super().__init__(loader)
-doc10           | Raw Rectified        |              51.75%
+doc10           | Raw Rectified        |               9.86%
 C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   super().__init__(loader)
-doc10           | CamScanner           |              37.72%
+doc10           | CamScanner           |              23.13%
 C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   super().__init__(loader)
-doc10           | Our U-Net            |              50.05%
+doc10           | Our U-Net            |              12.39%
 ----------------------------------------------------------------------
 C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   super().__init__(loader)
-doc11           | Raw Rectified        |               9.98%
+doc11           | Raw Rectified        |              15.05%
 C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   super().__init__(loader)
-doc11           | CamScanner           |              13.78%
+doc11           | CamScanner           |              17.93%
 C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   super().__init__(loader)
-doc11           | Our U-Net            |              23.58%
+doc11           | Our U-Net            |              21.64%
 ----------------------------------------------------------------------
 C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   super().__init__(loader)
-doc12           | Raw Rectified        |              34.68%
+doc12           | Raw Rectified        |              18.24%
 C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   super().__init__(loader)
-doc12           | CamScanner           |              24.65%
+doc12           | CamScanner           |              16.96%
 C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   super().__init__(loader)
-doc12           | Our U-Net            |              31.25%
+doc12           | Our U-Net            |              23.13%
 ----------------------------------------------------------------------
 C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   super().__init__(loader)
-doc13           | Raw Rectified        |              42.32%
+doc13           | Raw Rectified        |              99.95%
+doc13           | CamScanner           | 0.00 (No text found)
 C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   super().__init__(loader)
-doc13           | CamScanner           |              29.56%
-C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
-  super().__init__(loader)
-doc13           | Our U-Net            |              38.90%
+doc13           | Our U-Net            |              42.74%
 ----------------------------------------------------------------------
 C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   super().__init__(loader)
-doc14           | Raw Rectified        |              23.35%
+doc14           | Raw Rectified        |              60.91%
 C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   super().__init__(loader)
-doc14           | CamScanner           |              22.02%
+doc14           | CamScanner           |              53.34%
 C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   super().__init__(loader)
-doc14           | Our U-Net            |              19.95%
+doc14           | Our U-Net            |              45.45%
+----------------------------------------------------------------------
+doc15           | Raw Rectified        | 0.00 (No text found)
+C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
+  super().__init__(loader)
+doc15           | CamScanner           |              41.35%
+C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
+  super().__init__(loader)
+doc15           | Our U-Net            |              43.81%
 ----------------------------------------------------------------------
 C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   super().__init__(loader)
-doc15           | Raw Rectified        |              28.33%
+doc16           | Raw Rectified        |              47.20%
 C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   super().__init__(loader)
-doc15           | CamScanner           |              22.41%
+doc16           | CamScanner           |              36.32%
 C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   super().__init__(loader)
-doc15           | Our U-Net            |              37.16%
+doc16           | Our U-Net            |              34.33%
 ----------------------------------------------------------------------
 C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   super().__init__(loader)
-doc16           | Raw Rectified        |              50.67%
+doc17           | Raw Rectified        |              17.95%
 C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   super().__init__(loader)
-doc16           | CamScanner           |              51.00%
+doc17           | CamScanner           |              16.78%
 C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   super().__init__(loader)
-doc16           | Our U-Net            |              53.35%
+doc17           | Our U-Net            |              18.75%
+----------------------------------------------------------------------
+doc18           | Raw Rectified        | 0.00 (No text found)
+doc18           | CamScanner           | 0.00 (No text found)
+doc18           | Our U-Net            | 0.00 (No text found)
 ----------------------------------------------------------------------
 C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   super().__init__(loader)
-doc17           | Raw Rectified        |              12.97%
+doc19           | Raw Rectified        |              58.36%
 C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   super().__init__(loader)
-doc17           | CamScanner           |              15.53%
+doc19           | CamScanner           |              35.84%
 C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   super().__init__(loader)
-doc17           | Our U-Net            |              14.05%
+doc19           | Our U-Net            |              33.13%
+----------------------------------------------------------------------
+doc1            | Raw Rectified        | 0.00 (No text found)
+doc1            | CamScanner           | 0.00 (No text found)
+doc1            | Our U-Net            | 0.00 (No text found)
 ----------------------------------------------------------------------
 C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   super().__init__(loader)
-doc18           | Raw Rectified        |              21.74%
+doc2            | Raw Rectified        |              24.29%
 C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   super().__init__(loader)
-doc18           | CamScanner           |              26.17%
+doc2            | CamScanner           |              22.41%
 C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   super().__init__(loader)
-doc18           | Our U-Net            |              22.27%
+doc2            | Our U-Net            |              28.03%
 ----------------------------------------------------------------------
 C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   super().__init__(loader)
-doc19           | Raw Rectified        |              19.00%
+doc3            | Raw Rectified        |               8.72%
 C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   super().__init__(loader)
-doc19           | CamScanner           |              35.74%
+doc3            | CamScanner           |               6.67%
 C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   super().__init__(loader)
-doc19           | Our U-Net            |              50.42%
+doc3            | Our U-Net            |              15.18%
 ----------------------------------------------------------------------
 C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   super().__init__(loader)
-doc1            | Raw Rectified        |              38.42%
+doc4            | Raw Rectified        |              12.64%
 C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   super().__init__(loader)
-doc1            | CamScanner           |              32.34%
+doc4            | CamScanner           |              14.41%
 C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   super().__init__(loader)
-doc1            | Our U-Net            |              31.54%
+doc4            | Our U-Net            |              16.36%
 ----------------------------------------------------------------------
 C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   super().__init__(loader)
-doc2            | Raw Rectified        |              59.34%
+doc5            | Raw Rectified        |              21.06%
 C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   super().__init__(loader)
-doc2            | CamScanner           |              95.92%
+doc5            | CamScanner           |              22.51%
 C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   super().__init__(loader)
-doc2            | Our U-Net            |              79.99%
+doc5            | Our U-Net            |              23.87%
 ----------------------------------------------------------------------
 C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   super().__init__(loader)
-doc3            | Raw Rectified        |              16.51%
+doc6            | Raw Rectified        |              21.70%
 C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   super().__init__(loader)
-doc3            | CamScanner           |              17.96%
+doc6            | CamScanner           |              39.60%
 C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   super().__init__(loader)
-doc3            | Our U-Net            |              15.74%
+doc6            | Our U-Net            |              37.34%
 ----------------------------------------------------------------------
 C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   super().__init__(loader)
-doc4            | Raw Rectified        |              20.33%
+doc7            | Raw Rectified        |              35.54%
 C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   super().__init__(loader)
-doc4            | CamScanner           |              16.04%
+doc7            | CamScanner           |              30.60%
 C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   super().__init__(loader)
-doc4            | Our U-Net            |              21.36%
+doc7            | Our U-Net            |              40.63%
 ----------------------------------------------------------------------
 C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   super().__init__(loader)
-doc5            | Raw Rectified        |              46.09%
+doc8            | Raw Rectified        |              14.97%
 C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   super().__init__(loader)
-doc5            | CamScanner           |              43.46%
+doc8            | CamScanner           |              25.15%
 C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   super().__init__(loader)
-doc5            | Our U-Net            |              41.44%
+doc8            | Our U-Net            |              20.24%
 ----------------------------------------------------------------------
 C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   super().__init__(loader)
-doc6            | Raw Rectified        |              14.42%
+doc9            | Raw Rectified        |              44.97%
 C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   super().__init__(loader)
-doc6            | CamScanner           |              32.23%
+doc9            | CamScanner           |              52.15%
 C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
   super().__init__(loader)
-doc6            | Our U-Net            |              44.39%
-----------------------------------------------------------------------
-C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
-  super().__init__(loader)
-doc7            | Raw Rectified        |              15.46%
-C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
-  super().__init__(loader)
-doc7            | CamScanner           |              20.79%
-C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
-  super().__init__(loader)
-doc7            | Our U-Net            |              19.32%
-----------------------------------------------------------------------
-C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
-  super().__init__(loader)
-doc8            | Raw Rectified        |              93.63%
-C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
-  super().__init__(loader)
-doc8            | CamScanner           |              64.07%
-C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
-  super().__init__(loader)
-doc8            | Our U-Net            |              21.33%
-----------------------------------------------------------------------
-C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
-  super().__init__(loader)
-doc9            | Raw Rectified        |              42.56%
-C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
-  super().__init__(loader)
-doc9            | CamScanner           |              36.52%
-C:\Users\ETG 01.06.01\AppData\Local\Programs\Python\Python312\Lib\site-packages\torch\utils\data\dataloader.py:775: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
-  super().__init__(loader)
-doc9            | Our U-Net            |              49.17%
+doc9            | Our U-Net            |              32.30%
 ----------------------------------------------------------------------

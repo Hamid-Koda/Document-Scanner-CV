@@ -3,13 +3,13 @@ import easyocr
 import glob
 
 def calculate_confidence():
-    print("⏳ Loading EasyOCR model... (First run may download model files)")
+    print("Loading EasyOCR model... (First run may download model files)")
     reader = easyocr.Reader(['en']) 
     
     raw_images = glob.glob("real_test_photos/*_raw.jpg")
     
     if not raw_images:
-        print("❌ Error: No test images found in 'real_test_photos/'")
+        print("Error: No test images found in 'real_test_photos/'")
         return
 
     print("\n" + "="*70)
@@ -20,7 +20,7 @@ def calculate_confidence():
         base_name = os.path.basename(rect_path).replace("_raw.jpg", "")
         camscanner_path = rect_path.replace("_raw.jpg", "_camscanner.jpg")
         
-        our_model_path = f"evaluation_results/{base_name}_comparison.jpg"
+        our_model_path = f"evaluation_results/{base_name}_enhanced.jpg"
 
         image_paths = {
             "Raw Rectified": rect_path,
