@@ -295,6 +295,6 @@ def train_enhancement_model():
 
 
 if __name__ == '__main__':
-    train_enhancement_model() 
+    #train_enhancement_model() 
     #train_direct_corner_detector()
-    #train_heatmap_corner_detector()
+    train_heatmap_corner_detector()

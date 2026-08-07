@@ -96,8 +96,10 @@ class DirectCornerRegressor(nn.Module):
             nn.Flatten(),
             nn.Linear(512 * 4 * 4, 512),
             nn.ReLU(inplace=True),
+            nn.Dropout(p=0.5),  
             nn.Linear(512, 128),
             nn.ReLU(inplace=True),
+            nn.Dropout(p=0.3),  
             nn.Linear(128, 8),
             nn.Sigmoid()
         )
@@ -117,6 +119,7 @@ class HeatmapCornerRegressor(nn.Module):
         self.enc3 = DoubleConv(128, 256)
         self.pool3 = nn.MaxPool2d(2)
         self.bottleneck = DoubleConv(256, 512)
+        self.dropout = nn.Dropout2d(p=0.5)
         self.upconv3 = nn.ConvTranspose2d(512, 256, kernel_size=2, stride=2)
         self.dec3 = DoubleConv(512, 256)
         self.upconv2 = nn.ConvTranspose2d(256, 128, kernel_size=2, stride=2)
@@ -130,6 +133,7 @@ class HeatmapCornerRegressor(nn.Module):
         e2 = self.enc2(self.pool1(e1))
         e3 = self.enc3(self.pool2(e2))
         b = self.bottleneck(self.pool3(e3))
+        b = self.dropout(b)
         d3 = self.upconv3(b)
         d3 = torch.cat([e3, d3], dim=1)
         d3 = self.dec3(d3)
