@@ -34,10 +34,36 @@ def end_to_end_pipeline(raw_img_path, corner_model_path, enhance_model_path, out
     corners[:, 0] *= orig_w
     corners[:, 1] *= orig_h
 
-    # 4. Rectify (Warp Perspective)
-    target_w = 800
-    target_h = 1152
+    # 4. Rectify (Warp Perspective) - Smart A4 Aspect Ratio
+    (tl, tr, br, bl) = corners
+
+    # محاسبه عرض و ارتفاع بر اساس فاصله پیکسلی
+    widthA = np.sqrt(((br[0] - bl[0]) ** 2) + ((br[1] - bl[1]) ** 2))
+    widthB = np.sqrt(((tr[0] - tl[0]) ** 2) + ((tr[1] - tl[1]) ** 2))
+    max_w = max(int(widthA), int(widthB))
+
+    heightA = np.sqrt(((tr[0] - br[0]) ** 2) + ((tr[1] - br[1]) ** 2))
+    heightB = np.sqrt(((tl[0] - bl[0]) ** 2) + ((tl[1] - bl[1]) ** 2))
+    max_h = max(int(heightA), int(heightB))
+
+    # تشخیص افقی یا عمودی بودن کاغذ و اعمال نسبت استاندارد A4 (1.414)
+    if max_w > max_h:
+        # کاغذ افقی (Landscape) است
+        target_w = max_w
+        target_h = int(target_w / 1.414)
+    else:
+        # کاغذ عمودی (Portrait) است
+        target_h = max_h
+        target_w = int(target_h / 1.414)
+
+    # گرد کردن به نزدیک‌ترین مضرب 16 برای جلوگیری از ارور U-Net
+    target_w = target_w - (target_w % 16)
+    target_h = target_h - (target_h % 16)
     
+    # اطمینان از اینکه ابعاد صفر نمی‌شوند
+    target_w = max(target_w, 16)
+    target_h = max(target_h, 16)
+
     target_corners = np.array([
         [0, 0],
         [target_w, 0],
