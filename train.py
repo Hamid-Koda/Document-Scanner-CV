@@ -49,7 +49,6 @@ def train_direct_corner_detector():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = DirectCornerRegressor().to(device)
     
-    # 🎯 استفاده از Huber Loss برای جلوگیری از انفجار گرادیان‌ها
     criterion = nn.SmoothL1Loss()
     
     optimizer = optim.Adam(model.parameters(), lr=1e-4)

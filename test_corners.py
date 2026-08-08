@@ -10,7 +10,7 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 print("Loading model...")
 
 model = HeatmapCornerRegressor().to(device)
-model.load_state_dict(torch.load("weights/heatmap_corner_best.pth",
+model.load_state_dict(torch.load("weights/heatmap_corner_best(dropout).pth",
                                  map_location=device))
 model.eval()
 

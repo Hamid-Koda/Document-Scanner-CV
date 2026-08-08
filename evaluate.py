@@ -43,15 +43,15 @@ def calculate_metrics(model, dataloader, device, is_baseline=False):
 
 def evaluate_pipeline():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    print(f"🚀 Starting Evaluation Pipeline on: {device}")
+    print(f"Starting Evaluation Pipeline on: {device}")
     
     model = EnhancementUNet().to(device)
-    model.load_state_dict(torch.load('weights/enhancement_unet_best.pth', map_location=device))
+    model.load_state_dict(torch.load('weights/enhancement_unet_best(dropout).pth', map_location=device))
     model.eval()
 
     all_clean_paths = glob.glob("clean_scans/*.*")
     if len(all_clean_paths) == 0:
-        print("❌ Error: No clean scans found in 'clean_scans/' folder.")
+        print("Error: No clean scans found in 'clean_scans/' folder.")
         return
         
     random.seed(42)
@@ -62,7 +62,7 @@ def evaluate_pipeline():
     val_paths = all_clean_paths[int(0.7 * n):int(0.85 * n)]
     test_paths = all_clean_paths[int(0.85 * n):]
     
-    print(f"📊 Dataset Split -> Train: {len(train_paths)}, Val: {len(val_paths)}, Test: {len(test_paths)}")
+    print(f"Dataset Split -> Train: {len(train_paths)}, Val: {len(val_paths)}, Test: {len(test_paths)}")
 
     train_dataset = EnhancementDataset(train_paths, epoch_size=100)
     val_dataset = EnhancementDataset(val_paths, epoch_size=100)
