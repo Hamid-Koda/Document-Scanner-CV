@@ -17,8 +17,10 @@ class DoubleConv(nn.Module):
         return self.double_conv(x)
 
 class EnhancementUNet(nn.Module):
-    def __init__(self, in_channels=3, out_channels=3):
+    def __init__(self, in_channels=3, out_channels=3, use_dropout=False):
         super().__init__()
+        self.use_dropout = use_dropout
+        
         self.enc1 = DoubleConv(in_channels, 64)
         self.pool1 = nn.MaxPool2d(2)
         self.enc2 = DoubleConv(64, 128)
@@ -27,6 +29,7 @@ class EnhancementUNet(nn.Module):
         self.pool3 = nn.MaxPool2d(2)
         
         self.bottleneck = DoubleConv(256, 512)
+        self.dropout = nn.Dropout2d(p=0.1) if use_dropout else nn.Identity()
         
         self.upconv3 = nn.Sequential(
             nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True),
@@ -55,7 +58,7 @@ class EnhancementUNet(nn.Module):
         e3 = self.enc3(self.pool2(e2))
         
         b = self.bottleneck(self.pool3(e3))
-        # پاس دادن مستقیم تنسور بدون Dropout
+        b = self.dropout(b) 
         
         d3 = self.upconv3(b)
         d3 = torch.cat([e3, d3], dim=1)
@@ -74,9 +77,8 @@ class EnhancementUNet(nn.Module):
     
 
 class DirectCornerRegressor(nn.Module):
-    def __init__(self, in_channels=3):
+    def __init__(self, in_channels=3, use_dropout=False):
         super().__init__()
-        # شبکه‌ی استخراج ویژگیِ تثبیت‌شده با BatchNorm
         self.features = nn.Sequential(
             nn.Conv2d(in_channels, 32, kernel_size=3, padding=1, stride=2),
             nn.BatchNorm2d(32), nn.ReLU(inplace=True),
@@ -88,7 +90,6 @@ class DirectCornerRegressor(nn.Module):
             nn.BatchNorm2d(256), nn.ReLU(inplace=True),
             nn.Conv2d(256, 512, kernel_size=3, padding=1, stride=2),
             nn.BatchNorm2d(512), nn.ReLU(inplace=True),
-            # فشرده‌سازی هوشمندانه برای جلوگیری از انفجار پارامتر در لایه‌ی بعدی
             nn.AdaptiveAvgPool2d((4, 4))
         )
 
@@ -96,10 +97,10 @@ class DirectCornerRegressor(nn.Module):
             nn.Flatten(),
             nn.Linear(512 * 4 * 4, 512),
             nn.ReLU(inplace=True),
-            nn.Dropout(p=0.5),  
+            nn.Dropout(p=0.5) if use_dropout else nn.Identity(),  
             nn.Linear(512, 128),
             nn.ReLU(inplace=True),
-            nn.Dropout(p=0.3),  
+            nn.Dropout(p=0.3) if use_dropout else nn.Identity(),  
             nn.Linear(128, 8),
             nn.Sigmoid()
         )
@@ -110,7 +111,7 @@ class DirectCornerRegressor(nn.Module):
         return x.view(-1, 4, 2)
     
 class HeatmapCornerRegressor(nn.Module):
-    def __init__(self, in_channels=3, out_channels=4):
+    def __init__(self, in_channels=3, out_channels=4, use_dropout=False):
         super().__init__()
         self.enc1 = DoubleConv(in_channels, 64)
         self.pool1 = nn.MaxPool2d(2)
@@ -119,7 +120,9 @@ class HeatmapCornerRegressor(nn.Module):
         self.enc3 = DoubleConv(128, 256)
         self.pool3 = nn.MaxPool2d(2)
         self.bottleneck = DoubleConv(256, 512)
-        self.dropout = nn.Dropout2d(p=0.5)
+        
+        self.dropout = nn.Dropout2d(p=0.5) if use_dropout else nn.Identity()
+        
         self.upconv3 = nn.ConvTranspose2d(512, 256, kernel_size=2, stride=2)
         self.dec3 = DoubleConv(512, 256)
         self.upconv2 = nn.ConvTranspose2d(256, 128, kernel_size=2, stride=2)

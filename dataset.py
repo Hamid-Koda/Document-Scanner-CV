@@ -13,7 +13,6 @@ class DocumentDegradation:
         bg_h, bg_w = bg_img.shape[:2]
         src_pts = np.float32([[0, 0], [w, 0], [w, h], [0, h]])
         
-        # تضمین هندسیِ شکل با حلقه ارزیابی
         for _ in range(50):
             zoom_type = random.random()
             margin = 0.10 if zoom_type < 0.4 else (0.15 if zoom_type < 0.8 else 0.18)
@@ -33,11 +32,9 @@ class DocumentDegradation:
             
             dst_pts = np.float32([pt1, pt2, pt3, pt4])
             
-            # فیلتر حیاتی: فقط چهارضلعی‌های محدب و منطقی پذیرفته می‌شوند
             if cv2.isContourConvex(dst_pts.astype(int)):
                 break
         else:
-            # در صورت عدم موفقیت پس از ۵۰ بار، یک مستطیل امن تولید می‌شود
             dst_pts = np.float32([[left, top], [right, top], [right, bottom], [left, bottom]])
             
         M = cv2.getPerspectiveTransform(src_pts, dst_pts)
@@ -116,41 +113,46 @@ class DocumentDegradation:
         return cv2.imdecode(encimg, 1)
 
 class EnhancementDataset(Dataset):
-    def __init__(self, clean_scans, target_size=(256, 256), epoch_size=1000):
+    def __init__(self, clean_scans, target_size=(256, 256), epoch_size=1000, is_train=True):
         self.clean_scans = clean_scans
         self.target_size = target_size
-        self.epoch_size = epoch_size
+        self.is_train = is_train
+        self.epoch_size = epoch_size if is_train else len(clean_scans)
         self.degrader = DocumentDegradation()
         
     def __len__(self):
         return self.epoch_size
         
     def __getitem__(self, idx):
-        scan_path = random.choice(self.clean_scans)
+        if self.is_train:
+            scan_path = random.choice(self.clean_scans)
+        else:
+            # Freeze state for validation
+            self.r_state = random.getstate()
+            self.np_state = np.random.get_state()
+            random.seed(idx + 42)
+            np.random.seed(idx + 42)
+            scan_path = self.clean_scans[idx]
+            
         scan_img = cv2.imread(scan_path)
         assert scan_img is not None, f"❌ Error: Cannot read image at {scan_path}"
         scan_img = cv2.cvtColor(scan_img, cv2.COLOR_BGR2RGB)
         
-        # 🎯 تغییر طلایی: آموزش Patch-based 
-        # ۱. رساندن مقیاس عکس به مقیاس زمانِ تست (عرض 800)
         h, w = scan_img.shape[:2]
         new_w = 800
         new_h = int(h * (new_w / w))
         scan_img = cv2.resize(scan_img, (new_w, new_h))
         
-        # ۲. بریدن یک تکه‌ی تصادفیِ 256x256 از متن باکیفیت
         th, tw = self.target_size
         x = random.randint(0, max(0, new_w - tw))
         y = random.randint(0, max(0, new_h - th))
         base_img = scan_img[y:y+th, x:x+tw]
         
-        # گارد امنیتی
         if base_img.shape[:2] != self.target_size:
             base_img = cv2.resize(base_img, self.target_size)
             
         target_img = base_img.copy()
         
-        # ۳. اعمال نویزها روی تکه‌ی باکیفیت
         img = self.degrader.apply_brightness_contrast_color(base_img)
         img = self.degrader.apply_illumination_and_shadows(img)
         img = self.degrader.apply_blur_and_noise(img)
@@ -159,26 +161,39 @@ class EnhancementDataset(Dataset):
         input_tensor = torch.from_numpy(img).float().permute(2, 0, 1) / 255.0
         target_tensor = torch.from_numpy(target_img).float().permute(2, 0, 1) / 255.0
         
+        if not self.is_train:
+            random.setstate(self.r_state)
+            np.random.set_state(self.np_state)
+            
         return input_tensor, target_tensor
     
 
 class CornerDataset(Dataset):
-    def __init__(self, clean_scans, backgrounds, target_size=(256, 256), epoch_size=1000):
+    def __init__(self, clean_scans, backgrounds, target_size=(256, 256), epoch_size=1000, is_train=True):
         self.clean_scans = clean_scans
         self.backgrounds = backgrounds
         self.target_size = target_size
-        self.epoch_size = epoch_size
+        self.is_train = is_train
+        self.epoch_size = epoch_size if is_train else len(clean_scans)
         self.degrader = DocumentDegradation()
         
     def __len__(self):
         return self.epoch_size
         
     def __getitem__(self, idx):
-        scan_path = random.choice(self.clean_scans)
+        if self.is_train:
+            scan_path = random.choice(self.clean_scans)
+            bg_path = random.choice(self.backgrounds)
+        else:
+            self.r_state = random.getstate()
+            self.np_state = np.random.get_state()
+            random.seed(idx + 100)
+            np.random.seed(idx + 100)
+            scan_path = self.clean_scans[idx]
+            bg_path = self.backgrounds[idx % len(self.backgrounds)]
+            
         scan_img = cv2.imread(scan_path)
         assert scan_img is not None, f"❌ Error: Cannot read scan at {scan_path}"
-        
-        bg_path = random.choice(self.backgrounds)
         bg_img = cv2.imread(bg_path)
         assert bg_img is not None, f"❌ Error: Cannot read background at {bg_path}"
         
@@ -205,4 +220,8 @@ class CornerDataset(Dataset):
         img_tensor = torch.from_numpy(img_resized).float().permute(2, 0, 1) / 255.0
         corners_tensor = torch.from_numpy(corners_normalized).float()
         
+        if not self.is_train:
+            random.setstate(self.r_state)
+            np.random.set_state(self.np_state)
+            
         return img_tensor, corners_tensor
