@@ -22,8 +22,7 @@ def calculate_metrics(model, dataloader, device, is_baseline=False):
             if is_baseline:
                 preds = inputs.cpu().numpy()
             else:
-                with torch.autocast(device_type=device.type):
-                    preds = model(inputs).cpu().numpy()
+                preds = model(inputs).cpu().numpy()
             
             for i in range(preds.shape[0]):
                 img_pred = np.transpose(preds[i], (1, 2, 0))
@@ -45,10 +44,6 @@ def evaluate_pipeline():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f"Starting Evaluation Pipeline on: {device}")
     
-    model = EnhancementUNet().to(device)
-    model.load_state_dict(torch.load('weights/enhancement_unet_best(dropout).pth', map_location=device))
-    model.eval()
-
     all_clean_paths = glob.glob("clean_scans/*.*")
     if len(all_clean_paths) == 0:
         print("Error: No clean scans found in 'clean_scans/' folder.")
@@ -58,40 +53,56 @@ def evaluate_pipeline():
     random.shuffle(all_clean_paths)
     
     n = len(all_clean_paths)
-    train_paths = all_clean_paths[:int(0.7 * n)]
-    val_paths = all_clean_paths[int(0.7 * n):int(0.85 * n)]
-    test_paths = all_clean_paths[int(0.85 * n):]
+    train_paths = all_clean_paths[:int(0.8 * n)]
+    val_paths = all_clean_paths[int(0.8 * n):int(0.9 * n)]
+    test_paths = all_clean_paths[int(0.9 * n):]
     
     print(f"Dataset Split -> Train: {len(train_paths)}, Val: {len(val_paths)}, Test: {len(test_paths)}")
 
-    train_dataset = EnhancementDataset(train_paths, epoch_size=100)
-    val_dataset = EnhancementDataset(val_paths, epoch_size=100)
-    test_dataset = EnhancementDataset(test_paths, epoch_size=100)
+    train_dataset = EnhancementDataset(train_paths, epoch_size=100, is_train=True)
+    val_dataset = EnhancementDataset(val_paths, is_train=False)
+    test_dataset = EnhancementDataset(test_paths, is_train=False)
     
     train_loader = DataLoader(train_dataset, batch_size=16, shuffle=False)
     val_loader = DataLoader(val_dataset, batch_size=16, shuffle=False)
     test_loader = DataLoader(test_dataset, batch_size=16, shuffle=False)
 
+    model = EnhancementUNet(use_dropout=False).to(device)
+
+    models_to_test = {
+        "U-Net (No Dropout)": {"path": "weights/enhancement_unet_best(new).pth", "dropout": False},
+        "U-Net (With Dropout)": {"path": "weights/enhancement_unet_best(dropout-new).pth", "dropout": True}
+    }
+
     print("\n⏳ Calculating Baseline metrics on Test set (Degraded vs Clean)...")
     base_psnr, base_ssim = calculate_metrics(model, test_loader, device, is_baseline=True)
 
-    print("⏳ Calculating Train metrics...")
-    train_psnr, train_ssim = calculate_metrics(model, train_loader, device, is_baseline=False)
+    for model_name, config in models_to_test.items():
+        print("\n" + "="*60)
+        print(f" 📊 Evaluating Model: {model_name} ")
+        print("="*60)
+        
+        model = EnhancementUNet(use_dropout=config["dropout"]).to(device)
+        model.load_state_dict(torch.load(config["path"], map_location=device))
+        model.eval()
 
-    print("⏳ Calculating Validation metrics...")
-    val_psnr, val_ssim = calculate_metrics(model, val_loader, device, is_baseline=False)
+        print("⏳ Calculating Train metrics...")
+        train_psnr, train_ssim = calculate_metrics(model, train_loader, device, is_baseline=False)
 
-    print("⏳ Calculating Test metrics...")
-    test_psnr, test_ssim = calculate_metrics(model, test_loader, device, is_baseline=False)
+        print("⏳ Calculating Validation metrics...")
+        val_psnr, val_ssim = calculate_metrics(model, val_loader, device, is_baseline=False)
 
-    print("\n" + "="*50)
-    print(f"{'Split':<15} | {'PSNR (dB)':<12} | {'SSIM':<10}")
-    print("-" * 50)
-    print(f"{'Baseline (Test)':<15} | {base_psnr:<12.2f} | {base_ssim:<10.4f}")
-    print(f"{'Training':<15} | {train_psnr:<12.2f} | {train_ssim:<10.4f}")
-    print(f"{'Validation':<15} | {val_psnr:<12.2f} | {val_ssim:<10.4f}")
-    print(f"{'Test':<15} | {test_psnr:<12.2f} | {test_ssim:<10.4f}")
-    print("="*50 + "\n")
+        print("⏳ Calculating Test metrics...")
+        test_psnr, test_ssim = calculate_metrics(model, test_loader, device, is_baseline=False)
+
+        print("\n" + "-"*50)
+        print(f"{'Split':<15} | {'PSNR (dB)':<12} | {'SSIM':<10}")
+        print("-" * 50)
+        print(f"{'Baseline (Test)':<15} | {base_psnr:<12.2f} | {base_ssim:<10.4f}")
+        print(f"{'Training':<15} | {train_psnr:<12.2f} | {train_ssim:<10.4f}")
+        print(f"{'Validation':<15} | {val_psnr:<12.2f} | {val_ssim:<10.4f}")
+        print(f"{'Test':<15} | {test_psnr:<12.2f} | {test_ssim:<10.4f}")
+        print("-" * 50 + "\n")
 
 if __name__ == '__main__':
     evaluate_pipeline()

@@ -3,7 +3,7 @@ import easyocr
 import glob
 
 def calculate_confidence():
-    print("Loading EasyOCR model... (First run may download model files)")
+    print("Loading EasyOCR model...")
     reader = easyocr.Reader(['en']) 
     
     raw_images = glob.glob("real_test_photos/*_raw.jpg")

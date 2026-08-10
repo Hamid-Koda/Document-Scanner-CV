@@ -9,7 +9,7 @@ def batch_crop_from_json():
     output_dir = "json_cropped_photos"
 
     if not os.path.exists(json_path):
-        print(f"❌ Error: JSON file not found at {json_path}")
+        print(f"Error: JSON file not found at {json_path}")
         return
 
     os.makedirs(output_dir, exist_ok=True)
@@ -18,11 +18,10 @@ def batch_crop_from_json():
     with open(json_path, 'r') as f:
         coco_data = json.load(f)
 
-    # دیکشنری برای پیدا کردن سریع نام فایل با استفاده از image_id
     images_dict = {img['id']: img['file_name'] for img in coco_data['images']}
     
     target_w = 800
-    target_h = int(target_w * 1.414) # نسبت استاندارد کاغذ A4
+    target_h = int(target_w * 1.414) 
     
     target_corners = np.float32([
         [0, 0], 
@@ -40,10 +39,9 @@ def batch_crop_from_json():
 
         img_bgr = cv2.imread(img_path)
         if img_bgr is None:
-            print(f"⚠️ Warning: Could not read {img_filename}. Skipping...")
+            print(f"Warning: Could not read {img_filename}. Skipping...")
             continue
 
-        # استخراج 4 گوشه اصلی
         kp = ann['keypoints']
         true_corners = np.float32([
             [kp[0], kp[1]],
@@ -52,19 +50,15 @@ def batch_crop_from_json():
             [kp[9], kp[10]]
         ])
 
-        # محاسبه پرسپکتیو و برش عکس
         M = cv2.getPerspectiveTransform(true_corners, target_corners)
         cropped_img = cv2.warpPerspective(img_bgr, M, (target_w, target_h))
 
-        # ساخت نام فایل جدید مطابق با فرمت اسکریپت‌های ارزیابی شما
         base_name = os.path.splitext(img_filename)[0]
-        # برای جلوگیری از نام‌های خیلی طولانیِ روبوفلو، می‌توانی یک نام ساده بسازی
-        # اما فعلا نام اصلی را حفظ می‌کنیم
         save_path = os.path.join(output_dir, f"{base_name}_raw.jpg")
         
         cv2.imwrite(save_path, cropped_img)
         success_count += 1
-        print(f"✅ Cropped and saved: {base_name}_raw.jpg")
+        print(f"Cropped and saved: {base_name}_raw.jpg")
 
     print("=" * 50)
     print(f"🎉 Successfully cropped {success_count} images!")

@@ -10,8 +10,8 @@ def evaluate_cropped_triplets():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f"Starting Qualitative Evaluation on: {device}")
 
-    enhance_model = EnhancementUNet().to(device)
-    enhance_model.load_state_dict(torch.load('weights/enhancement_unet_best.pth', map_location=device))
+    enhance_model = EnhancementUNet(use_dropout=False).to(device)
+    enhance_model.load_state_dict(torch.load('weights/enhancement_unet_best(new).pth', map_location=device))
     enhance_model.eval()
 
     raw_images = glob.glob("real_test_photos/*_raw.jpg")
@@ -29,7 +29,7 @@ def evaluate_cropped_triplets():
             print(f"Warning: CamScanner version for {base_name} not found. Skipping...")
             continue
 
-        print(f"📸 Processing {base_name}...")
+        print(f"Processing {base_name}...")
 
         img_bgr = cv2.imread(rect_path)
         orig_h, orig_w = img_bgr.shape[:2]

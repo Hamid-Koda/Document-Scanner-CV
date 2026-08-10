@@ -26,10 +26,10 @@ def evaluate_models():
     images_dict = {img['id']: img['file_name'] for img in coco_data['images']}
     
     models_to_test = {
-        "Approach A (No Dropout)": {"class": DirectCornerRegressor, "weight": "weights/direct_corner_best.pth"},
-        "Approach A (With Dropout)": {"class": DirectCornerRegressor, "weight": "weights/direct_corner_best(dropout).pth"},
-        "Approach B (No Dropout)": {"class": HeatmapCornerRegressor, "weight": "weights/heatmap_corner_best.pth"},
-        "Approach B (With Dropout)": {"class": HeatmapCornerRegressor, "weight": "weights/heatmap_corner_best(dropout).pth"}
+        "Approach A (No Dropout)": {"class": DirectCornerRegressor, "weight": "weights/direct_corner_best(new).pth", "dropout": False},
+        "Approach A (With Dropout)": {"class": DirectCornerRegressor, "weight": "weights/direct_corner_best(dropout-new).pth", "dropout": True},
+        "Approach B (No Dropout)": {"class": HeatmapCornerRegressor, "weight": "weights/heatmap_corner_best(new).pth", "dropout": False},
+        "Approach B (With Dropout)": {"class": HeatmapCornerRegressor, "weight": "weights/heatmap_corner_best(dropout-new).pth", "dropout": True}
     }
 
     threshold = 200.0 
@@ -44,16 +44,9 @@ def evaluate_models():
             print(f"{model_name:<30} | {'Weight file missing':<20} | {'-':<20}")
             continue
 
-        model = info["class"]().to(device)
+        model = info["class"](use_dropout=info["dropout"]).to(device)
         
         state_dict = torch.load(weight_path, map_location=device)
-        if "Approach A" in model_name and "No Dropout" in model_name:
-             if "regressor.3.weight" in state_dict:
-                 state_dict["regressor.4.weight"] = state_dict.pop("regressor.3.weight")
-                 state_dict["regressor.4.bias"] = state_dict.pop("regressor.3.bias")
-                 state_dict["regressor.7.weight"] = state_dict.pop("regressor.5.weight")
-                 state_dict["regressor.7.bias"] = state_dict.pop("regressor.5.bias")
-                 
         model.load_state_dict(state_dict)
         model.eval()
 
@@ -100,8 +93,8 @@ def evaluate_models():
             if np.max(distances) <= threshold:
                 success_count += 1
 
-        final_mean_error = total_error / total_images
-        final_success_rate = (success_count / total_images) * 100
+        final_mean_error = total_error / total_images if total_images > 0 else 0
+        final_success_rate = (success_count / total_images) * 100 if total_images > 0 else 0
         
         print(f"{model_name:<30} | {final_mean_error:<17.2f} px | {final_success_rate:>13.2f} %")
 
