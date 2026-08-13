@@ -76,7 +76,7 @@ def train_enhancement_model(use_dropout=False):
     best_model_path = f'weights/enhancement_unet_best{tag}.pth'
     best_val_loss = float('inf')
 
-    print(f"\n🚀 Training Enhancement Model | Dropout: {use_dropout}")
+    print(f"\nTraining Enhancement Model | Dropout: {use_dropout}")
     
     for epoch in range(num_epochs):
         model.train()
@@ -135,7 +135,7 @@ def train_direct_corner_detector(use_dropout=False):
     best_model_path = f'weights/direct_corner_best{tag}.pth'
     best_loss = float('inf')
 
-    print(f"\n🚀 Training Direct Corner Model | Dropout: {use_dropout}")
+    print(f"\nTraining Direct Corner Model | Dropout: {use_dropout}")
     
     for epoch in range(num_epochs):
         model.train()
@@ -194,7 +194,7 @@ def train_heatmap_corner_detector(use_dropout=False):
     best_model_path = f'weights/heatmap_corner_best{tag}.pth'
     best_loss = float('inf')
 
-    print(f"\n🚀 Training Heatmap Model | Dropout: {use_dropout}")
+    print(f"\nTraining Heatmap Model | Dropout: {use_dropout}")
     
     for epoch in range(num_epochs):
         model.train()
@@ -243,4 +243,4 @@ if __name__ == '__main__':
     train_heatmap_corner_detector(use_dropout=False)
     train_heatmap_corner_detector(use_dropout=True)
     
-    print("\n🎉 All 6 models have been successfully trained and saved!")
+    print("\nAll 6 models have been successfully trained and saved!")

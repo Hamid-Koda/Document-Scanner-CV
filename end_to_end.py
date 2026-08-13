@@ -2,15 +2,16 @@ import cv2
 import numpy as np
 import torch
 import os
+import matplotlib.pyplot as plt 
 from model import EnhancementUNet, HeatmapCornerRegressor, soft_argmax_2d
 
 def end_to_end_pipeline(raw_img_path, corner_model_path, enhance_model_path, output_path, device='cpu'):
-    # 1. Load both trained models
-    corner_model = HeatmapCornerRegressor().to(device)
+    # 1. Load both trained models (Updated Architecture)
+    corner_model = HeatmapCornerRegressor(use_dropout=False).to(device)
     corner_model.load_state_dict(torch.load(corner_model_path, map_location=device))
     corner_model.eval()
 
-    enhance_model = EnhancementUNet().to(device)
+    enhance_model = EnhancementUNet(use_dropout=False).to(device)
     enhance_model.load_state_dict(torch.load(enhance_model_path, map_location=device))
     enhance_model.eval()
 
@@ -37,7 +38,6 @@ def end_to_end_pipeline(raw_img_path, corner_model_path, enhance_model_path, out
     # 4. Rectify (Warp Perspective) - Smart A4 Aspect Ratio
     (tl, tr, br, bl) = corners
 
-    # محاسبه عرض و ارتفاع بر اساس فاصله پیکسلی
     widthA = np.sqrt(((br[0] - bl[0]) ** 2) + ((br[1] - bl[1]) ** 2))
     widthB = np.sqrt(((tr[0] - tl[0]) ** 2) + ((tr[1] - tl[1]) ** 2))
     max_w = max(int(widthA), int(widthB))
@@ -46,21 +46,18 @@ def end_to_end_pipeline(raw_img_path, corner_model_path, enhance_model_path, out
     heightB = np.sqrt(((tl[0] - bl[0]) ** 2) + ((tl[1] - bl[1]) ** 2))
     max_h = max(int(heightA), int(heightB))
 
-    # تشخیص افقی یا عمودی بودن کاغذ و اعمال نسبت استاندارد A4 (1.414)
     if max_w > max_h:
-        # کاغذ افقی (Landscape) است
+        # (Landscape) 
         target_w = max_w
         target_h = int(target_w / 1.414)
     else:
-        # کاغذ عمودی (Portrait) است
+        # (Portrait) 
         target_h = max_h
         target_w = int(target_h / 1.414)
 
-    # گرد کردن به نزدیک‌ترین مضرب 16 برای جلوگیری از ارور U-Net
     target_w = target_w - (target_w % 16)
     target_h = target_h - (target_h % 16)
     
-    # اطمینان از اینکه ابعاد صفر نمی‌شوند
     target_w = max(target_w, 16)
     target_h = max(target_h, 16)
 
@@ -86,13 +83,30 @@ def end_to_end_pipeline(raw_img_path, corner_model_path, enhance_model_path, out
     
     final_output_bgr = cv2.cvtColor(final_output_rgb, cv2.COLOR_RGB2BGR)
     cv2.imwrite(output_path, final_output_bgr)
-    print(f"End-to-End scan successful! Saved to '{output_path}'")
+    print(f"✅ End-to-End scan successful! Saved to '{output_path}'")
+
+    fig, axs = plt.subplots(1, 3, figsize=(18, 8))
+    
+    axs[0].imshow(img_rgb)
+    axs[0].set_title("1. Raw Input Image", fontsize=14, fontweight='bold')
+    axs[0].axis('off')
+
+    axs[1].imshow(rectified_rgb)
+    axs[1].set_title("2. Cropped & Rectified", fontsize=14, fontweight='bold')
+    axs[1].axis('off')
+
+    axs[2].imshow(final_output_rgb)
+    axs[2].set_title("3. Final Enhanced Scan", fontsize=14, fontweight='bold')
+    axs[2].axis('off')
+
+    plt.tight_layout()
+    plt.show()
 
 if __name__ == '__main__':
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    print(f"Using device: {device}")
+    print(f"🚀 Using device: {device}")
     
-    test_image_path = 'test_image.jpg' 
+    test_image_path = 'test_image(4).jpg' 
     output_image_path = 'final_clean_scan.jpg'
     
     if not os.path.exists(test_image_path):
@@ -101,8 +115,8 @@ if __name__ == '__main__':
         print("Starting End-to-End Document Scanner...")
         end_to_end_pipeline(
             raw_img_path=test_image_path,
-            corner_model_path='weights/heatmap_corner_best(dropout).pth',
-            enhance_model_path='weights/enhancement_unet_best(dropout).pth',
+            corner_model_path='weights/heatmap_corner_best(new).pth',
+            enhance_model_path='weights/enhancement_unet_best(new).pth',
             output_path=output_image_path,
             device=device
         )

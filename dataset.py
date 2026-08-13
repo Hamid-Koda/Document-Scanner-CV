@@ -135,7 +135,7 @@ class EnhancementDataset(Dataset):
             scan_path = self.clean_scans[idx]
             
         scan_img = cv2.imread(scan_path)
-        assert scan_img is not None, f"❌ Error: Cannot read image at {scan_path}"
+        assert scan_img is not None, f"Error: Cannot read image at {scan_path}"
         scan_img = cv2.cvtColor(scan_img, cv2.COLOR_BGR2RGB)
         
         h, w = scan_img.shape[:2]
@@ -193,9 +193,9 @@ class CornerDataset(Dataset):
             bg_path = self.backgrounds[idx % len(self.backgrounds)]
             
         scan_img = cv2.imread(scan_path)
-        assert scan_img is not None, f"❌ Error: Cannot read scan at {scan_path}"
+        assert scan_img is not None, f"Error: Cannot read scan at {scan_path}"
         bg_img = cv2.imread(bg_path)
-        assert bg_img is not None, f"❌ Error: Cannot read background at {bg_path}"
+        assert bg_img is not None, f"Error: Cannot read background at {bg_path}"
         
         scan_img = cv2.resize(scan_img, (512, 512))
         bg_img = cv2.resize(bg_img, (512, 512))
