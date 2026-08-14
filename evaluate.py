@@ -74,25 +74,25 @@ def evaluate_pipeline():
         "U-Net (With Dropout)": {"path": "weights/enhancement_unet_best(dropout-new).pth", "dropout": True}
     }
 
-    print("\n⏳ Calculating Baseline metrics on Test set (Degraded vs Clean)...")
+    print("\nCalculating Baseline metrics on Test set (Degraded vs Clean)...")
     base_psnr, base_ssim = calculate_metrics(model, test_loader, device, is_baseline=True)
 
     for model_name, config in models_to_test.items():
         print("\n" + "="*60)
-        print(f" 📊 Evaluating Model: {model_name} ")
+        print(f" Evaluating Model: {model_name} ")
         print("="*60)
         
         model = EnhancementUNet(use_dropout=config["dropout"]).to(device)
         model.load_state_dict(torch.load(config["path"], map_location=device))
         model.eval()
 
-        print("⏳ Calculating Train metrics...")
+        print("Calculating Train metrics...")
         train_psnr, train_ssim = calculate_metrics(model, train_loader, device, is_baseline=False)
 
-        print("⏳ Calculating Validation metrics...")
+        print("Calculating Validation metrics...")
         val_psnr, val_ssim = calculate_metrics(model, val_loader, device, is_baseline=False)
 
-        print("⏳ Calculating Test metrics...")
+        print("Calculating Test metrics...")
         test_psnr, test_ssim = calculate_metrics(model, test_loader, device, is_baseline=False)
 
         print("\n" + "-"*50)

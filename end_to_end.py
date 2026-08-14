@@ -35,7 +35,7 @@ def end_to_end_pipeline(raw_img_path, corner_model_path, enhance_model_path, out
     corners[:, 0] *= orig_w
     corners[:, 1] *= orig_h
 
-    # 4. Rectify (Warp Perspective) - Smart A4 Aspect Ratio
+    # 4. Rectify (Warp Perspective) 
     (tl, tr, br, bl) = corners
 
     widthA = np.sqrt(((br[0] - bl[0]) ** 2) + ((br[1] - bl[1]) ** 2))
@@ -83,7 +83,7 @@ def end_to_end_pipeline(raw_img_path, corner_model_path, enhance_model_path, out
     
     final_output_bgr = cv2.cvtColor(final_output_rgb, cv2.COLOR_RGB2BGR)
     cv2.imwrite(output_path, final_output_bgr)
-    print(f"✅ End-to-End scan successful! Saved to '{output_path}'")
+    print(f"End-to-End scan successful! Saved to '{output_path}'")
 
     fig, axs = plt.subplots(1, 3, figsize=(18, 8))
     
@@ -104,9 +104,9 @@ def end_to_end_pipeline(raw_img_path, corner_model_path, enhance_model_path, out
 
 if __name__ == '__main__':
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    print(f"🚀 Using device: {device}")
+    print(f"Using device: {device}")
     
-    test_image_path = 'test_image(4).jpg' 
+    test_image_path = 'test_image.jpg' 
     output_image_path = 'final_clean_scan.jpg'
     
     if not os.path.exists(test_image_path):

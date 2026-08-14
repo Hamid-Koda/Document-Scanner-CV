@@ -15,7 +15,7 @@ def optimize_images(folder_path, max_size=800):
             img = cv2.resize(img, (new_w, new_h), interpolation=cv2.INTER_AREA)
         
         cv2.imwrite(img_path, img, [cv2.IMWRITE_JPEG_QUALITY, 80])
-        print(f"✅ Optimized: {img_path}")
+        print(f"Optimized: {img_path}")
 
 if __name__ == '__main__':
     print("Starting optimization...")

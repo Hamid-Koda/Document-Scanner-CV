@@ -14,7 +14,7 @@ def batch_crop_from_json():
 
     os.makedirs(output_dir, exist_ok=True)
     
-    print("⏳ Loading JSON and starting batch crop...")
+    print("Loading JSON and starting batch crop...")
     with open(json_path, 'r') as f:
         coco_data = json.load(f)
 
@@ -61,8 +61,8 @@ def batch_crop_from_json():
         print(f"Cropped and saved: {base_name}_raw.jpg")
 
     print("=" * 50)
-    print(f"🎉 Successfully cropped {success_count} images!")
-    print(f"📁 You can find them in the '{output_dir}' folder.")
+    print(f"Successfully cropped {success_count} images!")
+    print(f"You can find them in the '{output_dir}' folder.")
 
 if __name__ == '__main__':
     batch_crop_from_json()

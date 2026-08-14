@@ -17,17 +17,16 @@ def test_overfit():
     
     clean_paths = glob.glob("clean_scans/*.*")
     if not clean_paths:
-        print("❌ Error: No images found in 'clean_scans/'")
+        print("Error: No images found in 'clean_scans/'")
         return
         
     dataset = EnhancementDataset(clean_paths, epoch_size=1)
     
-    # گرفتن فقط یک نمونه تصادفی
     input_tensor, target_tensor = dataset[0]
     input_batch = input_tensor.unsqueeze(0).to(device)
     target_batch = target_tensor.unsqueeze(0).to(device)
     
-    print("🚀 Starting Overfit Test on 1 Image (500 Epochs)...")
+    print("Starting Overfit Test on 1 Image (500 Epochs)...")
     for epoch in range(500):
         model.train()
         optimizer.zero_grad()
@@ -41,7 +40,6 @@ def test_overfit():
         if (epoch + 1) % 50 == 0:
             print(f"Epoch [{epoch+1}/500], Loss: {loss.item():.4f}")
             
-    # نمایش خروجی نهایی
     model.eval()
     with torch.no_grad():
         final_out = model(input_batch).squeeze().cpu().permute(1, 2, 0).numpy()

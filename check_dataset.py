@@ -10,33 +10,28 @@ def visualize_dataset_samples(num_samples=4):
     background_paths = glob.glob("backgrounds/*.*")
     
     if not clean_scans_paths or not background_paths:
-        print("❌ Error: Folders 'clean_scans' or 'backgrounds' are empty or not found!")
+        print("Error: Folders 'clean_scans' or 'backgrounds' are empty or not found!")
         return
 
-    # فراخوانی دیتاست با تنظیماتی که اصلاح کردیم
     dataset = CornerDataset(clean_scans_paths, background_paths, target_size=(256, 256), epoch_size=10)
     
     fig, axs = plt.subplots(2, num_samples // 2, figsize=(15, 8))
     axs = axs.flatten()
     
-    colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0)] # قرمز، سبز، آبی، زرد
+    colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0)] 
     
     for i in range(num_samples):
         img_tensor, corners_tensor = dataset[i]
         
-        # برگرداندن عکس از تنسور به فرمت نمایشیِ OpenCV
         img_np = (img_tensor.permute(1, 2, 0).numpy() * 255).astype(np.uint8)
-        img_np = cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR) # برای رسم با OpenCV
+        img_np = cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR) 
         
-        # برگرداندن مختصات از مقیاس 0-1 به مقیاس 256x256
         corners_np = (corners_tensor.numpy() * 256).astype(int)
         
-        # رسم دایره و شماره روی هر گوشه
         for j, (x, y) in enumerate(corners_np):
             cv2.circle(img_np, (x, y), radius=5, color=colors[j], thickness=-1)
             cv2.putText(img_np, str(j+1), (x + 8, y - 8), cv2.FONT_HERSHEY_SIMPLEX, 0.6, colors[j], 2)
             
-        # تبدیل مجدد به RGB برای نمایش در Matplotlib
         img_rgb = cv2.cvtColor(img_np, cv2.COLOR_BGR2RGB)
         
         axs[i].imshow(img_rgb)
